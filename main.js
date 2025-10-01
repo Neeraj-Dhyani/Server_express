@@ -5,7 +5,7 @@ const { default: mongoose } = require("mongoose");
 let cors = require("cors");
 require("dotenv").config();
 const path = require("path");
-let PORT = 5000;
+let PORT = process.env.PORT ||5000;
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json())
