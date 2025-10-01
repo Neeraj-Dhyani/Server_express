@@ -38,7 +38,7 @@ router.post("/uploadproduct",  upload.none(), async(req, res)=>{
     res.status(200).json({msg:"product upload successfully!" , file:imagePath})
 
     } catch (error) {
-        console.log(error)
+         res.status(500).json({ message: "Internal server error", error: err.message });
     }
 
 })

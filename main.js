@@ -14,7 +14,13 @@ app.use(cors({
     origin:["http://localhost:5173", "http://localhost:5174"],
     credentials: true  
 }))
-
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(500).json({
+    message: "Internal server error",
+    error: err.message,
+  });
+});
 mongoose.connect(process.env.MONGO_URI).then(()=>{
     console.log("database conected successfully!")
 }).catch((err)=>{

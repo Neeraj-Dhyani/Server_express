@@ -12,9 +12,10 @@ const crypto = require("crypto");
 const {VerificationCode} = require('../SendVerificationCode');
 const pwnedpassword = require('pwnedpasswords');
 const { json } = require('stream/consumers');
+const { error } = require('console');
 require("dotenv").config();
 // ------------------------------user register-------------------------------------------------->
-router.post("/registerUser", async(req, res)=>{
+router.post("/registerUser", async(req, res, next)=>{
     let {name, email, username, password, phone, address, city, zipcode, state, country} = req.body;
 
     if(!name||!email||!username||!password||!phone||!address||!state||!country||!city||!zipcode){
@@ -47,7 +48,7 @@ router.post("/registerUser", async(req, res)=>{
         return res.status(200).json({msg:"register successfully"});
 
     }catch(err){
-        res.status(404).json({error:err.message})
+        next(err)
     }
 });
 router.post("/checkpassword", async (req, res)=>{
@@ -59,7 +60,7 @@ router.post("/checkpassword", async (req, res)=>{
         res.status(404).json({msg:err})
     }
 })
-router.get("/getCountryiso/:country", (req, res)=>{
+router.get("/getCountryiso/:country", (req, res, next)=>{
     
    try{
         const country = req.params.country;
@@ -69,10 +70,10 @@ router.get("/getCountryiso/:country", (req, res)=>{
         }
         res.status(200).json({code:isocode.iso2})
    }catch(err){
-    console.log(err)
+     next(err)
    }
 })
-router.post("/sendVerification", async(req, res)=>{
+router.post("/sendVerification", async(req, res, next)=>{
     const {email} = req.body;
     console.log(email)
     try{
@@ -85,10 +86,10 @@ router.post("/sendVerification", async(req, res)=>{
         VerificationCode(verifyEmail, token);
         res.status(200).json({msg:"successfully sent on your email"});
     }catch(err){
-        res.status(400).json({msg:"somthing went wrong"});
+        next(err)
     }
 })
-router.put("/forgotPassword", async(req, res)=>{
+router.put("/forgotPassword", async(req, res, next)=>{
     const {token, resetpassword} = req.body;
     try{
         const user = await User.findOne({token, tokenExpiry:{$gt:Date.now()}}) 
@@ -103,11 +104,11 @@ router.put("/forgotPassword", async(req, res)=>{
         res.status(200).json({msg:"password resset successfully"});
 
     }catch(err){
-        console.log(err)
+        next(err)
     }
 })
 // -----------------------------------user login------------------------------------------------>
-router.post("/login", async(req, res)=>{
+router.post("/login", async(req, res, next)=>{
     let {username, password} = req.body;
     if(!username||!password){
         return res.status(422).json({msg:"pleas fill all fields!"})
@@ -126,46 +127,51 @@ router.post("/login", async(req, res)=>{
         return res.status(405).json({msg:"invailid user and password"})
         }
      }catch(err){
-        res.status(500).json({msg:"something went wrong: ",err})
+        next(err)
     }
 })
-router.get("/userprotection", requireLogin, async(req, res)=>{
-    res.status(200).json({msg : req.appuser});
+router.get("/userprotection", requireLogin, async(req, res, next)=>{
+    try{
+         res.status(200).json({msg : req.appuser});
+    }catch(err){
+        next(err)
+    }
+   
 });
 // --------------------------------update user--------------------------------------------->
-router.put("/changeEmail", requireLogin, async(req, res)=>{
+router.put("/changeEmail", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id;
     const{email} = req.body
     try{
         const user = await User.findByIdAndUpdate(userid, {email}, {new:true}, { runValidators: true});
         res.status(200).json({msg:"email change successfully", user})
     }catch(err){
-        console.log(`Error:${err}`);
+        next(err)
     }
 })
-router.put("/changePhonenumber", requireLogin, async(req, res)=>{
+router.put("/changePhonenumber", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id;
     const  {phone}= req.body
     try{
         const user = await User.findByIdAndUpdate(userid, {phone}, {new:true}, { runValidators: true});
         res.status(200).json({msg:"phone number change successfully", user}, {new:true}, { runValidators: true})
     }catch(err){
-        console.log(`Error:${err}`);
+        next(err)
     }
 
 })
-router.put("/updateAddress", requireLogin, async(req, res)=>{
+router.put("/updateAddress", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id;
     const {address} = req.body;
     try{
         const user = await User.findByIdAndUpdate(userid, {address}, {new:true}, { runValidators: true});
         res.status(200).json({msg:"address change successfully", user})
     }catch(err){
-        console.log(err);
+        next(err)
     }
 
 });
-router.delete("/deleteUser", requireLogin, async(req, res)=>{
+router.delete("/deleteUser", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id
     try{
         const deleteUser = await User.findByIdAndDelete(userid);
@@ -174,12 +180,12 @@ router.delete("/deleteUser", requireLogin, async(req, res)=>{
         }
         res.status(200).json({msg:"Deleted successfully!!"})
     }catch(err){
-        console.log(err)
+        next(err)
     }
     
 })
 // --------------------------------add to cart------------------------------------------------>
-router.put("/addtocart", requireLogin, async(req, res)=>{
+router.put("/addtocart", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id, quantity} = req.body
 
@@ -202,10 +208,10 @@ router.put("/addtocart", requireLogin, async(req, res)=>{
         await user.save();
         return res.status(200).json({ message: "Product added to cart", cart: user.cart });
     }catch(err){
-        console.log(err)
+        next(err)
     }
 });
-router.put("/addquantity", requireLogin, async(req, res)=>{
+router.put("/addquantity", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id} = req.body
     try{
@@ -222,10 +228,10 @@ router.put("/addquantity", requireLogin, async(req, res)=>{
         }
 
     }catch(err){
-        console.log(err);
+        next(err)
     }  
 });
-router.put("/decreasequantity", requireLogin, async(req, res)=>{
+router.put("/decreasequantity", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id} = req.body
     try{
@@ -245,11 +251,11 @@ router.put("/decreasequantity", requireLogin, async(req, res)=>{
         }
 
     }catch(err){
-        console.log(err);
+        next(err)
     }
 });
 // --------------------------------------remove to cart--------------------------------------->
-router.delete("/removetocart", requireLogin, async(req, res)=>{
+router.delete("/removetocart", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id} = req.body
 
@@ -259,7 +265,7 @@ router.delete("/removetocart", requireLogin, async(req, res)=>{
         await user.save();
         return res.status(200).json({ message: "Product removed to cart", cart: user.cart });
     }catch(err){
-        console.log(err)
+        next(err)
     }
 });
 // --------------------------------------------place order------------------------------------>
@@ -291,7 +297,7 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
         SendDatatoGmail(customer_Order);
     }catch(err){
         console.log(err)
-        res.status(500).json({ error: "Something went wrong while placing the order" });
+        res.status(500).json({ msg: "Something went wrong while placing the order", error:err});
     }
 
 });
