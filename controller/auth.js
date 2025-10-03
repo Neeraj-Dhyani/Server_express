@@ -191,7 +191,7 @@ router.put("/addtocart", requireLogin, async(req, res, next)=>{
 
     try{
         let productdata = await Product.findById(product_id)
-        const image = productdata.image;
+        const image = productdata.variants[0].images[0];
         const price = productdata.price;
         const name = productdata.name;
         console.log(productdata);
