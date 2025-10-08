@@ -7,6 +7,9 @@ const orderShema = new Schema({
     ref: "User",
     required: true
   },
+  customerName:{
+    type:String
+  },
    products:[
      {
       productID: {
@@ -26,7 +29,7 @@ const orderShema = new Schema({
       price: {
         type: Number,
         required: true
-      }
+      },
     }
   ],
   customerAddress:{

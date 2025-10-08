@@ -271,25 +271,31 @@ router.delete("/removetocart", requireLogin, async(req, res, next)=>{
 // --------------------------------------------place order------------------------------------>
 router.post("/placeOrder", requireLogin, async(req, res)=>{
     // console.log(req.appuser);
-    const {productID} = req.body;
+    const {cart, totalPrice} = req.body;
     const user_Id = req.appuser._id;
+    const user_name = req.appuser.name
+    const customer_Address = req.appuser.address
     // const findproduct= req.appuser.cart.find((item)=>item.product == productID);
-    const quantity = findproduct.quantity;
-    const customer_Address = req.appuser.addresse
+    // const quantity = findproduct.quantity;
+    if(!cart || cart.length === 0){
+        return res.status(404).json({msg:"Cart is empty please Add somthing in cart"}) 
+    }
 
     try{
-        let {name, price} = await Product.findById(productID);
-        let totalamount = price*quantity;
+        const product  = cart.map((item)=>{
+            return {
+                productID: item.product,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+            }
+        })
         const customer_Order = new Order({
             customerID:user_Id,
-            products:[{
-                productID,
-                name,
-                quantity,
-                price
-            }],
-             customerAddress:customer_Address,
-            totalAmount:totalamount
+            customerName:user_name,
+            products:product,
+            customerAddress: customer_Address,
+            totalAmount: totalPrice
         })
         await customer_Order.save();
         let user = await User.findByIdAndUpdate(user_Id, {$push:{orders:customer_Order._id}})

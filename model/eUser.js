@@ -72,7 +72,8 @@ const userSchema = new Schema({
     },
     image:{
       type: String
-    }
+    },
+    
   }],
   orders: [{
     type: Schema.Types.ObjectId,

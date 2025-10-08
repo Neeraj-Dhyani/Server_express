@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../model/product");
 const multer = require("multer");
+const requireLogin = require("../middleware/requireLogin");
+const { trusted } = require("mongoose");
 
 const storage = multer.diskStorage({
     destination: function(req, file, cd){
@@ -97,6 +99,40 @@ router.delete("/deleteProduct/:id", async(req, res)=>{
     console.log(err);
    }
 
+})
+
+router.put("/ProductRating/:id", requireLogin ,async (req, res)=>{
+    const id = req.params.id
+    const user_id = req.appuser._id
+    const {rating_num, review_txt} = req.body
+
+    try{
+       const product = await Product.findById(id);
+       console.log(product)
+       if(!product){
+         return res.status(404).json({msg:"Product not found"})
+       }
+       const exiting_user = product.ratings.find((value)=>{
+            value.user.toString() === user_id.toString( )
+            })
+        if(exiting_user){
+        exiting_user.stars = rating_num,
+        exiting_user.review = review_txt
+       }else{    
+       product.ratings.push({
+            user:user_id,
+            stars:rating_num,
+            review:review_txt
+        })
+        }
+       
+       await product.save()
+       res.status(200).json({msg:"Thanks for rating", average: product.averageRating });
+
+    }catch(err){
+        console.log(err)
+        res.status(500).json({ error: "Server error while rating product",})
+    }
 })
 
 module.exports = router
