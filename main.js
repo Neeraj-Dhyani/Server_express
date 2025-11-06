@@ -29,6 +29,7 @@ mongoose.connect(process.env.MONGO_URI).then(()=>{
 
 app.use(require("./controller/auth"))
 app.use(require("./controller/product"))
+app.use(require("./controller/chatbot"))
 
 app.listen(PORT, ()=>{
     console.log(`surver runnig on http://localhost:${PORT}`);

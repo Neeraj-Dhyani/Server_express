@@ -75,6 +75,10 @@ const userSchema = new Schema({
     },
     
   }],
+  instock:{
+    type:Number,
+    default: 0
+  },
   orders: [{
     type: Schema.Types.ObjectId,
     ref: 'Order',

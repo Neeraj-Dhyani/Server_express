@@ -69,6 +69,7 @@ router.get("/getallProduct", async (req, res)=>{
         console.log(err);
     }
 })
+
 router.get("/getProductbyid/:id", async(req, res)=>{
     let productId = req.params.id;
     try{
@@ -78,6 +79,19 @@ router.get("/getProductbyid/:id", async(req, res)=>{
         console.log(err)
     }
 })
+router.get("/searchProdcut", async(req, res)=>{
+    const {searchvalue} = req.query
+    try{
+        const Searchproduct = await Product.find({name:{$regex:searchvalue, $options:"i"}})
+        if(Searchproduct.length === 0){
+            return res.status(404).json({msg:"Product not Found"})
+        }
+        res.status(200).json({msg:"this is your product", product:Searchproduct});
+    }catch(err){
+        console.log(err)
+    }
+})
+
 router.put("/updatePriduct/:id", async(req, res)=>{
     try{
         let id = req.params.id

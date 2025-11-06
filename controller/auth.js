@@ -6,15 +6,17 @@ const jwt = require("jsonwebtoken");
 const requireLogin = require("../middleware/requireLogin");
 const Product  = require("../model/product");
 const Order = require("../model/eOrder");
-const {SendDatatoGmail }= require("../sendtogmail");
+const {SendOrdertoGmail, CancelOrder}= require("../sendtogmail");
 const lookup = require("country-code-lookup")
 const crypto = require("crypto");
 const {VerificationCode} = require('../SendVerificationCode');
 const pwnedpassword = require('pwnedpasswords');
 const { json } = require('stream/consumers');
 const { error } = require('console');
+const { model } = require('mongoose');
 require("dotenv").config();
-// ------------------------------user register-------------------------------------------------->
+
+// ------------------------------user register----------------------------------------------->
 router.post("/registerUser", async(req, res, next)=>{
     let {name, email, username, password, phone, address, city, zipcode, state, country} = req.body;
 
@@ -268,6 +270,7 @@ router.delete("/removetocart", requireLogin, async(req, res, next)=>{
         next(err)
     }
 });
+
 // --------------------------------------------place order------------------------------------>
 router.post("/placeOrder", requireLogin, async(req, res)=>{
     // console.log(req.appuser);
@@ -298,14 +301,33 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
             totalAmount: totalPrice
         })
         await customer_Order.save();
+
         let user = await User.findByIdAndUpdate(user_Id, {$push:{orders:customer_Order._id}})
+        user.cart = [];
         res.status(201).json({ message: "Order placed successfully", order: customer_Order, userorder:user});
-        SendDatatoGmail(customer_Order);
+        SendOrdertoGmail(customer_Order);
     }catch(err){
         console.log(err)
         res.status(500).json({ msg: "Something went wrong while placing the order", error:err});
     }
 
 });
-
+router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
+   const { order_id }= req.body;
+   const  approveLink = `http:///admin/approveCancel/order_id=${order_id}`
+   try{
+    if(!order_id){
+        return res.status(400).json({msg:"Order ID required"})
+    }
+    const order = await Order.findById(order_id);
+    if(!order){
+        return res.status(404).json({msg:"Oder not found"})
+    }
+    order.status = "Pending Cancel"
+    await order.save();
+    CancelOrder(order);
+   }catch(err){
+    next(err)
+   }
+})
 module.exports = router;
