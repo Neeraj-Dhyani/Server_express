@@ -4,6 +4,9 @@ const Product = require("../model/product");
 const multer = require("multer");
 const requireLogin = require("../middleware/requireLogin");
 const { trusted } = require("mongoose");
+const requireapinkey = require("../middleware/requireapinkey");
+const Category = require("../model/category")
+
 
 const storage = multer.diskStorage({
     destination: function(req, file, cd){
@@ -15,8 +18,8 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage:storage});
 
-router.post("/uploadproduct",  upload.none(), async(req, res)=>{
-    const {itemCode, name, price,  category, description, hsnCode, gst, note, wash, timeToShip} = req.body;
+router.post("/uploadproduct",  upload.none(), requireLogin, async(req, res)=>{
+    const {itemCode, name, price,  category, description, gst, note} = req.body;
 
     try {
         const verifyProduct = await Product.findOne({name})
@@ -28,12 +31,9 @@ router.post("/uploadproduct",  upload.none(), async(req, res)=>{
         name,
         category,
         price,
-        hsnCode,
         gst,
         description,
         note,
-        wash,
-        timeToShip,
         variants:[]
     })
     await newproduct.save();
@@ -60,7 +60,7 @@ router.put("/uploadproductimg/:id", upload.array("images", 5), async(req, res)=>
     }
     
 })
-router.get("/getallProduct", async (req, res)=>{
+router.get("/getallProduct", requireapinkey,async (req, res)=>{
     try{
         let Productdb = await Product.find();
         let ProductData = Productdb.map(emp=>emp.toObject());
@@ -75,6 +75,22 @@ router.get("/getProductbyid/:id", async(req, res)=>{
     try{
         const product =  await Product.findById(productId);
         res.status(200).json({pt: product});
+    }catch(err){
+        console.log(err)
+    }
+})
+router.get("/getProductbycategory/:slug", requireapinkey, async(req, res)=>{
+    let slug = req.params.slug
+    try{
+        const category = await Category.findOne({slug:slug})
+        if(!category){
+            return res.status(404).json({msg:"category not found"})
+        }
+        const all_product_by_category = await Product.find({category:category._id})
+        if(!all_product_by_category.length === 0){
+            return res.status(404).json({msg:"category not found"})
+        }
+        res.status(200).json({product:all_product_by_category})
     }catch(err){
         console.log(err)
     }

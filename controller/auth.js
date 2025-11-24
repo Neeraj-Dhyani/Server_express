@@ -323,6 +323,9 @@ router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
     if(!order){
         return res.status(404).json({msg:"Oder not found"})
     }
+    if(order.status === "delivered"){
+        return res.status(400).json({msg:"this product delivered"})    
+    }
     order.status = "Pending Cancel"
     await order.save();
     CancelOrder(order);
