@@ -87,6 +87,7 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  isblock:{type:Boolean, default:false}
 
 }, { timestamps: true });
 

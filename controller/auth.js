@@ -120,13 +120,17 @@ router.post("/login", async(req, res, next)=>{
         if(!userexiting){
             return res.status(400).json({msg:"user not valid"})
         }
-        let correctpassword = await bcrypt.compare(password, userexiting.password);;
+        let correctpassword = await bcrypt.compare(password, userexiting.password);
+
         if(correctpassword){
             let token = jwt.sign({id:userexiting._id},process.env.SECRETKEY)
             res.status(200).json({token , msg:"login succussefully"});
             
         }else{
         return res.status(405).json({msg:"invailid user and password"})
+        } 
+        if(userexiting.isblock === true){
+            res.status(401).json({msg:"you are blocked by admin"})
         }
      }catch(err){
         next(err)
@@ -314,7 +318,6 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
 });
 router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
    const { order_id }= req.body;
-   const  approveLink = `http:///admin/approveCancel/order_id=${order_id}`
    try{
     if(!order_id){
         return res.status(400).json({msg:"Order ID required"})
@@ -326,7 +329,7 @@ router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
     if(order.status === "delivered"){
         return res.status(400).json({msg:"this product delivered"})    
     }
-    order.status = "Pending Cancel"
+    order.status = "Cancel"
     await order.save();
     CancelOrder(order);
    }catch(err){

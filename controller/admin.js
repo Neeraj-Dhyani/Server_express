@@ -1,14 +1,16 @@
 const express = require("express")
 const router = express.Router()
 const Admin = require("../model/admin")
+const User = require("../model/eUser")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const APIKEY = require("../model/api_key")
-const api_key = require("../model/api_key")
 const slugify = require("slugify")
 const Category = require("../model/category")
 const category = require("../model/category")
+const requireapinkey = require("../middleware/requireapinkey")
+const { findOne } = require("../model/product")
 
 router.post("/creatAccount", async(req, res, next)=>{
     const {email, password} = req.body
@@ -107,6 +109,44 @@ router.delete("/deletecategory/:id", async(req, res, next)=>{
     try{
         await Category.findByIdAndDelete(id)
         res.status(200).json({msg:"category deleted successfully"})
+    }catch(err){
+        next(err)
+    }
+})
+
+router.get("/getalluser", requireapinkey, async(req, res, next)=>{
+    try{
+        const all_user = User.find().select("-password")
+        res.status(200).json({user:all_user})
+    }catch(err){
+        next(err)
+    }
+})
+router.put("/blockuser/:id", requireapinkey, async(req, res, next)=>{
+    const {id} = req.params
+    try{
+        const user = User.findById(id)
+        await User.findByIdAndUpdate(id, {isblock:true})
+        res.status(200).json({msg:`user ${user.name} is blocked`})
+    }catch(err){
+        next(err)
+    }
+})
+router.put("/unblockuser/:id", requireapinkey, async(req, res, next)=>{
+    const {id} = req.params
+    try{
+        const user = User.findById(id)
+        await User.findByIdAndUpdate(id, {isblock:false})
+        res.status(200).json({msg:`user ${user.name} is unblocked`})
+    }catch(err){
+        next(err)
+    }
+})
+router.delete("/deleteuser/:id" , requireapinkey, async(req, res, next)=>{
+    const {id} = req.params
+    try{
+        await User.findByIdAndDelete(id)
+        res.status(200).json({success:true, msg:"user deleted successfully"})
     }catch(err){
         next(err)
     }
