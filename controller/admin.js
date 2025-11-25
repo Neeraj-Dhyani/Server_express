@@ -2,15 +2,17 @@ const express = require("express")
 const router = express.Router()
 const Admin = require("../model/admin")
 const User = require("../model/eUser")
+const Order = require("../model/eOrder")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const APIKEY = require("../model/api_key")
 const slugify = require("slugify")
 const Category = require("../model/category")
-const category = require("../model/category")
 const requireapinkey = require("../middleware/requireapinkey")
 const { findOne } = require("../model/product")
+const Product = require("../model/product")
+const category = require("../model/category")
 
 router.post("/creatAccount", async(req, res, next)=>{
     const {email, password} = req.body
@@ -147,6 +149,68 @@ router.delete("/deleteuser/:id" , requireapinkey, async(req, res, next)=>{
     try{
         await User.findByIdAndDelete(id)
         res.status(200).json({success:true, msg:"user deleted successfully"})
+    }catch(err){
+        next(err)
+    }
+})
+
+router.get("/getallorder", requireapinkey, async(req, res, next)=>{
+    try{
+        const all_order = await Order.find();
+        res.status(200).json({success:true, order:all_order})
+    }catch(err){
+        next(err)
+    }
+})
+router.put("/updateorderstatus", requireapinkey, async(req, res, next)=>{
+    const {id} = req.query 
+    const {order_status} = req.body
+    try{
+        const update_order_status  = await Order.findByIdAndUpdate(id, {status:order_status}, {new:true})
+        res.status(200).json({msg:"order status change successfully"})
+    }catch(err){
+        next(err)
+    }
+})
+router.get("/companystatus", requireapinkey, async(req, res, next)=>{
+    try{
+        const totall_User = await User.countDocuments()
+        const totall_Prodcut = await Product.countDocuments()
+        const totall_Order = await Order.countDocuments()
+        const totall_Category = await Category.countDocuments()
+
+        const order_paid = await Order.find({paymentStatus:"paid"})
+        const total_revenue = order_paid.reduce((sum, order)=>{
+            sum+order.totalAmount, 0})
+        const monthly_sale  = await Order.aggregate([
+           {
+            $match:{
+                status:"delivered"
+            }
+           },
+           {
+            $group:{
+                _id:{$month:"$createdAt"},
+                total_sale:{$sum:"$totalAmount"},
+                total_order:{$sum:1}
+            }
+        },
+        {
+            $sort:{
+                "_id":1
+            }
+        }
+        ])    
+        res.status(200).json({
+            success:true, 
+            user:totall_User,
+            poroduct:totall_Prodcut,
+            order:totall_Order,
+            category:totall_Category,
+            ravenue:total_revenue,
+            sales:monthly_sale
+
+        })
     }catch(err){
         next(err)
     }

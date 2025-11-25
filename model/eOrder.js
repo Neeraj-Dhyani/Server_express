@@ -53,7 +53,11 @@ const orderShema = new Schema({
   totalAmount:{
     type: Number,
     required: true
+  },
+  paymentStatus:{
+    type:String
   }
+  
 })
 
 module.exports = mongoose.model("eOrder", orderShema)
