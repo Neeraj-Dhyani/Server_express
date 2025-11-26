@@ -1,24 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../model/product");
-const multer = require("multer");
+const Busboy = require("busboy")
+const fs = require("fs")
+const path = require("path")
 const requireLogin = require("../middleware/requireLogin");
 const { trusted } = require("mongoose");
 const requireapinkey = require("../middleware/requireapinkey");
 const Category = require("../model/category")
 
-
-const storage = multer.diskStorage({
-    destination: function(req, file, cd){
-        cd(null, "./uploads")
-    },
-    filename: function(req, file, cd) {
-         cd(null, `${Date.now()}-${file.originalname}`)
-    }
-})
-const upload = multer({storage:storage});
-
-router.post("/uploadproduct",  upload.none(), requireLogin, async(req, res)=>{
+router.post("/uploadproduct", requireLogin, async(req, res)=>{
     const {itemCode, name, price,  category, description, gst, note} = req.body;
 
     try {
@@ -44,11 +35,29 @@ router.post("/uploadproduct",  upload.none(), requireLogin, async(req, res)=>{
     }
 
 })
-router.put("/uploadproductimg/:id", upload.array("images", 5), async(req, res)=>{
+router.put("/uploadproductimg/:id",async(req, res)=>{
+    const busboy = Busboy({headers:req.headers})
     const {id} = req.params;
-    const {color, size} = req.body;
-    const images= req.files.map(file => file.path.replace(/\\/g, "/"));
-    try{
+    const color= '' 
+    const size = ''
+    const images = []
+    const upload_image = path.join(__dirname, "../Produce_Image")
+    if(!fs.existsSync(upload_image)){
+        fs.mkdirSync(upload_image)
+    }
+    busboy.on("field", (filedname, value)=>{
+        if(filedname === "color") color=value;
+        if(filedname === size)color=value;
+    })
+    busboy.on("file", (fieldname, file, {filename})=>{
+        const savePath = path.join(upload_image, `${Date.now}-${filename}`)
+        const writeSteam = fs.createWriteStream(savePath)
+        file.pipe(writeSteam)
+        images.push(savePath)
+    })
+    // const images= req.files.map(file => file.path.replace(/\\/g, "/"));
+    busboy.on("finish", async()=>{
+        try{
         const verifyProduct = await Product.findById(id)
         if(!verifyProduct){
             res.status(404).json({msg:"product not found !!"}) 
@@ -58,6 +67,8 @@ router.put("/uploadproductimg/:id", upload.array("images", 5), async(req, res)=>
     }catch(err){
         res.status(400).json({msg:"somthing went wrong!", Error:err})
     }
+    })
+    req.pipe(busboy)
     
 })
 router.get("/getallProduct", requireapinkey,async (req, res)=>{

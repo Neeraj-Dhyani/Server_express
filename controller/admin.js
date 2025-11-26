@@ -2,17 +2,21 @@ const express = require("express")
 const router = express.Router()
 const Admin = require("../model/admin")
 const User = require("../model/eUser")
+const Product = require("../model/product")
+const Banner  = require("../model/banner")
 const Order = require("../model/eOrder")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const crypto = require("crypto")
 const APIKEY = require("../model/api_key")
 const slugify = require("slugify")
+const Busboy = require("busboy")
+const fs = require("fs");
+const path = require("path")
 const Category = require("../model/category")
 const requireapinkey = require("../middleware/requireapinkey")
-const { findOne } = require("../model/product")
-const Product = require("../model/product")
-const category = require("../model/category")
+
+
 
 router.post("/creatAccount", async(req, res, next)=>{
     const {email, password} = req.body
@@ -172,6 +176,51 @@ router.put("/updateorderstatus", requireapinkey, async(req, res, next)=>{
         next(err)
     }
 })
+router.post("/createbanner", requireapinkey, async(req, res, next)=>{
+    const busboy = Busboy({headers:req.headers})
+    const title = "";
+    const subtitle = "";
+    const offer = "";
+    const coupon = "";
+    const images = [];
+    
+    const upload_image = path.join(__dirname, "../uploaded_Banner_image")
+    if(!fs.existsSync(upload_image)){
+            fs.mkdirSync(upload_image)
+        }
+    busboy.on("field", (fieldname, value) => {
+    if (fieldname === "title") title = value;
+    if (fieldname === "subtitle") subtitle = value;
+    if (fieldname === "offer") offer = value;
+    if (fieldname === "coupon") coupon = value;
+  });
+
+    busboy.on('file', (fieldname, file, {filename})=>{
+        const savePath = path.join(upload_image, `${Date.now()}-${filename}`)
+        const writeSteam = fs.createWriteStream(savePath)
+        file.pipe(writeSteam)
+        images.push(savePath)
+    })
+     busboy.on("finish", async()=>{
+        try{
+            const new_banner = await Banner.create({title, subtitle, offer, coupon, image:images[0]})
+            res.status(200).json({msg:"Banner create successfully"})
+        }catch(err){
+            res.status(400).json({msg:"somthing went wrong!", Error:err})
+        }
+    })
+    req.pipe(busboy)
+})
+router.delete("deletebanner/:id", requireapinkey, async(req, res, next)=>{
+    const {id} = req.params
+    try{
+        await Banner.findByIdAndDelete(id)
+        res.status(200).json({msg:"Banner Deleted successfully"})
+    }catch(err){
+        next(err)
+    }
+})
+
 router.get("/companystatus", requireapinkey, async(req, res, next)=>{
     try{
         const totall_User = await User.countDocuments()
