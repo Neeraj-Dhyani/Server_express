@@ -11,9 +11,9 @@ const lookup = require("country-code-lookup")
 const crypto = require("crypto");
 const {VerificationCode} = require('../SendVerificationCode');
 const pwnedpassword = require('pwnedpasswords');
+const Coupon = require("../model/coupon");
 const { json } = require('stream/consumers');
-const { error } = require('console');
-const { model } = require('mongoose');
+const coupon = require('../model/coupon');
 require("dotenv").config();
 
 // ------------------------------user register----------------------------------------------->
@@ -274,6 +274,53 @@ router.delete("/removetocart", requireLogin, async(req, res, next)=>{
         next(err)
     }
 });
+//------------------------------ coupon code ------------------------------------------------------>
+router.post("/applycode", requireLogin, async(req, res, next)=>{
+    const {couponCode, totalAmount} = req.body
+    try{
+        const verifyCoupon = await Coupon.findOne({couponCode})
+        if(req.appuser.couponUsage.include(couponCode)){
+            return res.json({msg:"your already used this coupon code"})
+        }
+        if(!verifyCoupon){
+            return res.status(404).json({msg:"invaild coupon"})
+        }
+        if(verifyCoupon.active !== true){
+            return res.json({msg:"coupon not active"})
+        }
+        if(verifyCoupon.expiryDate<Date.now()){
+            return res.json({msg:"coupon is expire"})
+        }
+        if(verifyCoupon.maxUsage&&verifyCoupon.useCount >= verifyCoupon.maxUsage){
+            return res.json({msg:"coupon usage reached"})
+        }
+        if(totalAmount<verifyCoupon.minOrderAmount){
+            return res.json({msg:`your total amount less then coupon amount ${verifyCoupon.minOrderAmount}`})
+        }
+        let discount = 0;
+        if(verifyCoupon.discountType === "percentage"){
+            discount = (totalAmount*verifyCoupon.discountValue)/100
+            if(verifyCoupon.maxDiscount){
+                discount =Math.min(totalAmount, verifyCoupon.maxDiscount)
+            }
+        }
+        
+        if(verifyCoupon.discountType === "fixed"){
+            discount = verifyCoupon.discountValue
+        }
+        req.appuser.couponUsage.push(couponCode)
+        await req.appuser.save()
+        res.status(200).json({
+            success:true,
+            discount,
+            finalamount:totalAmount-discount
+        })
+        verifyCoupon.useCount+= 1
+        await verifyCoupon.save()
+    }catch(err){
+        next(err)
+    }
+})
 
 // --------------------------------------------place order------------------------------------>
 router.post("/placeOrder", requireLogin, async(req, res)=>{

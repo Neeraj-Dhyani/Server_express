@@ -14,6 +14,7 @@ const Busboy = require("busboy")
 const fs = require("fs");
 const path = require("path")
 const Category = require("../model/category")
+const Coupon = require("../model/coupon")
 const requireapinkey = require("../middleware/requireapinkey")
 
 
@@ -220,7 +221,42 @@ router.delete("deletebanner/:id", requireapinkey, async(req, res, next)=>{
         next(err)
     }
 })
+router.post("/creatcouponcode", requireapinkey, async(req, res, next)=>{
+    const { 
+        discountType,
+        discountValue,
+        minOrderAmount,
+        maxDiscount,
+        expiryDate,
+        maxUsage
+    } = req.body
+    const  code = ()=>{
+        return crypto.randomBytes(4).toString("hex").toUpperCase
+    }
+   try{
+     const new_coupon = await Coupon.create({
+        code,
+        discountType,
+        discountValue,
+        minOrderAmount,
+        maxDiscount,
+        expiryDate,
+        maxUsage
+    })
+    res.status(201).json({success:true, msg:"coupon code successfully created", coupon:new_coupon})
+   }catch(err){
+    next(err)
+   }
 
+})
+router.delete("deletecouponcode/:id", requireapinkey, async(req, res, next)=>{
+    try{
+        await Coupon.findByIdAndDelete(id)
+        res.status(200).json({msg:"coupon code sucessfully deleted"})
+    }catch(err){
+        next(err)
+    }
+})
 router.get("/companystatus", requireapinkey, async(req, res, next)=>{
     try{
         const totall_User = await User.countDocuments()

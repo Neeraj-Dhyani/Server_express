@@ -83,6 +83,10 @@ const userSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Order',
   }],
+  couponUsage:[{
+    type:Schema.Types.ObjectId,
+    ref:'Coupon'
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
