@@ -203,7 +203,7 @@ pre{background:#0b1220;color:#e6eef8;padding:12px;border-radius:8px;margin-top:1
 
 ## License
 
-MIT © Your Name
+MIT © Neeraj Dhayni
 
 ---
 
