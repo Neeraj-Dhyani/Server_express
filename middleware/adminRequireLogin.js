@@ -1,10 +1,10 @@
 let jwt = require("jsonwebtoken");
-let User = require("../model/eUser");
+let Admin = require("../model/admin");
 require("dotenv").config();
 
 module.exports = async (req, res, next)=>{
-    const authorization = req.headers.authorization;
-    console.log(authorization)
+    const authorization = req.cookies.token;
+    // console.log(authorization)
     if(!authorization){
         res.status(401).json({msg:"login fisrt"})
     } 
@@ -19,7 +19,7 @@ module.exports = async (req, res, next)=>{
         if(!decodedid){
             console.log("login two");
         }
-        let appuser =  await User.findById(decodedid.id);
+        let appuser =  await Admin.findById(decodedid.id);
         req.appuser = appuser;
         // console.log(appuser);
         next();

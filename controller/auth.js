@@ -53,6 +53,7 @@ router.post("/registerUser", async(req, res, next)=>{
         next(err)
     }
 });
+
 router.post("/checkpassword", async (req, res)=>{
     const {password} =  req.body
     try{
@@ -62,6 +63,7 @@ router.post("/checkpassword", async (req, res)=>{
         res.status(404).json({msg:err})
     }
 })
+
 router.get("/getCountryiso/:country", (req, res, next)=>{
     
    try{
@@ -75,6 +77,7 @@ router.get("/getCountryiso/:country", (req, res, next)=>{
      next(err)
    }
 })
+
 router.post("/sendVerification", async(req, res, next)=>{
     const {email} = req.body;
     console.log(email)
@@ -91,6 +94,7 @@ router.post("/sendVerification", async(req, res, next)=>{
         next(err)
     }
 })
+
 router.put("/forgotPassword", async(req, res, next)=>{
     const {token, resetpassword} = req.body;
     try{
@@ -109,6 +113,7 @@ router.put("/forgotPassword", async(req, res, next)=>{
         next(err)
     }
 })
+
 // -----------------------------------user login------------------------------------------------>
 router.post("/login", async(req, res, next)=>{
     let {username, password} = req.body;
@@ -136,6 +141,7 @@ router.post("/login", async(req, res, next)=>{
         next(err)
     }
 })
+
 router.get("/userprotection", requireLogin, async(req, res, next)=>{
     try{
          res.status(200).json({msg : req.appuser});
@@ -166,6 +172,7 @@ router.put("/changePhonenumber", requireLogin, async(req, res, next)=>{
     }
 
 })
+
 router.put("/updateAddress", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id;
     const {address} = req.body;
@@ -177,6 +184,7 @@ router.put("/updateAddress", requireLogin, async(req, res, next)=>{
     }
 
 });
+
 router.delete("/deleteUser", requireLogin, async(req, res, next)=>{
     const userid = req.appuser._id
     try{
@@ -217,6 +225,7 @@ router.put("/addtocart", requireLogin, async(req, res, next)=>{
         next(err)
     }
 });
+
 router.put("/addquantity", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id} = req.body
@@ -237,6 +246,7 @@ router.put("/addquantity", requireLogin, async(req, res, next)=>{
         next(err)
     }  
 });
+
 router.put("/decreasequantity", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
     let {product_id} = req.body
@@ -354,6 +364,10 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
         await customer_Order.save();
 
         let user = await User.findByIdAndUpdate(user_Id, {$push:{orders:customer_Order._id}})
+
+        cart.map( async(item)=>{
+            await Product.findByIdAndUpdate(item.product, {quantity:-product.quantity})
+        })
         user.cart = [];
         res.status(201).json({ message: "Order placed successfully", order: customer_Order, userorder:user});
         SendOrdertoGmail(customer_Order);
@@ -383,4 +397,5 @@ router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
     next(err)
    }
 })
+
 module.exports = router;

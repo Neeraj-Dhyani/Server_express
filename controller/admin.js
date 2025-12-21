@@ -19,18 +19,20 @@ const requireapinkey = require("../middleware/requireapinkey")
 
 
 
-router.post("/creatAccount", async(req, res, next)=>{
-    const {email, password} = req.body
-    if(!email||!password){
+router.post("/createAccount", async(req, res, next)=>{
+    const {name, email, password} = req.body
+    console.log(req.body)
+    if(!name||!email||!password){
         return res.status(400).json({msg:"please fill all field "})
     }
     try{
-        const check_exitingUser = await Admin.findOne(email);
+        const check_exitingUser = await Admin.findOne({email:email});
         if(check_exitingUser){
             return res.status(409).json({msg:"user already exiting"})
         }
-        const hashpassowed = bcrypt.hash(password, 12)
+        const hashpassowed = await bcrypt.hash(password, 12)
         const admin =  new Admin({
+            name,
             email,
             password:hashpassowed
         })
@@ -41,20 +43,27 @@ router.post("/creatAccount", async(req, res, next)=>{
     }
 
 })
-router.post("/login", async(req, res, next)=>{
+router.post("/adminlogin", async(req, res, next)=>{
     const {email, password} = req.body
-    if(!email||password){
-        return res.status(400).json({msg:"pleas fill all the field!"})
+    if(!email||!password){
+        return res.status(400).json({msg:"please fill all the fields!"})
     }
     try{
         const adminexiting = await Admin.findOne({email:email})
         if(!adminexiting){
             return res.status(404).json({msg:"admin not found"})
         }
-        const correctpassword = await bcrypt(password, adminexiting.password)
+        const correctpassword = await bcrypt.compare(password, adminexiting.password)
         if(correctpassword){
             const token = jwt.sign({id:adminexiting._id}, process.env.SECRETKEY)
-            return res.status(200).json({msg:"login successfully"})
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: false,
+                maxAge :20*60*60*100
+            })
+            return res.status(200).json({success:true, redirect:"/admin/home" ,token:token})
+        
+            
         }else{
             return res.status(405).json({msg:"invailid user or password"})
         }
@@ -79,21 +88,24 @@ router.get("/apikeygenerator", async(req, res, next)=>{
         next(err)
     }
 })
-router.post("/createcategory", async(req, res, next)=>{
+router.post("/createcategory", requireapinkey,async(req, res, next)=>{
     const {name} = req.body;
     try{
         const slug = slugify(name, {lower:true})
         const newCategory = await Category.create({name, slug})
-        res.status(200).json({msg:"cotegory careated successfully"})
+        res.status(200).json({success:true, msg:"cotegory careated successfully"})
+        res.redirect("addCategory", {success:true})
     }catch(err){
         next(err)
+        res.redirect("addCartegory", {error:false})
     }
 })
 
-router.get("/getallcategory", async(req, res, next)=>{
+router.get("/getallcategory", requireapinkey, async(req, res, next)=>{
     try{
         const all_category = await Category.find()
         res.status(200).json({category:all_category})
+
     }catch(err){
         next(err)
     }
@@ -129,22 +141,24 @@ router.get("/getalluser", requireapinkey, async(req, res, next)=>{
         next(err)
     }
 })
-router.put("/blockuser/:id", requireapinkey, async(req, res, next)=>{
+router.put("/blockuser/:id", async(req, res, next)=>{
     const {id} = req.params
     try{
         const user = User.findById(id)
         await User.findByIdAndUpdate(id, {isblock:true})
-        res.status(200).json({msg:`user ${user.name} is blocked`})
+        res.status(200).json({ success:true, msg:`user ${user.name} is blocked`})
+        res.redirect("allUser", {success:true})
     }catch(err){
         next(err)
     }
 })
-router.put("/unblockuser/:id", requireapinkey, async(req, res, next)=>{
+router.put("/unblockuser/:id",  async(req, res, next)=>{
     const {id} = req.params
     try{
         const user = User.findById(id)
         await User.findByIdAndUpdate(id, {isblock:false})
-        res.status(200).json({msg:`user ${user.name} is unblocked`})
+        res.status(200).json({ suucess:true ,msg:`user ${user.name} is unblocked`})
+        res.redirect("allUser", {success:true})
     }catch(err){
         next(err)
     }

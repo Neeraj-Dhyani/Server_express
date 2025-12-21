@@ -1,0 +1,93 @@
+   <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card shadow-lg p-4" style="width: 28rem; border-radius: 15px;">
+            <h2 class="text-center mb-4">Admin Login</h2>
+            
+            <div id="errorAlert" class="alert alert-danger d-none">
+                <span id="errorMessage"></span>
+            </div>
+            
+            <form id="login_form">
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        class="form-control" 
+                        placeholder="Enter your email"
+                        required>
+                </div>
+
+                <div class="mb-3" style="position: relative;">
+                    <label class="form-label">Password</label>
+                    <input
+                        id="password_input"
+                        type="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter your password"
+                        required
+                        style="padding-right: 40px;">
+                    <span 
+                        id="togglePassword"
+                        class="material-symbols-outlined"
+                        style="position: absolute; right: 15px; top: 38px; cursor: pointer; user-select: none;">
+                        visibility_off
+                    </span>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100 mt-2">Login</button>
+            </form>
+        </div>
+    </div>
+<script>
+    
+    const input = document.querySelector("#password_input")
+    const togglePassword = document.querySelector("#togglePassword")
+    let hide = true;
+    togglePassword.addEventListener("click", ()=>{
+        if(hide === true){
+            input.type = "text"
+            togglePassword.textContent = "visibility"
+            hide = false
+        }else{
+            input.type = "password"
+            togglePassword.textContent = "visibility_off"
+            hide = true
+            
+        }
+    })
+    const form = document.querySelector("#login_form")
+
+    form.addEventListener("submit", async (e)=>{
+        e.preventDefault()
+      const email = document.querySelector("input[name='email']").value
+      const password = document.querySelector("input[name='password']").value
+
+      console.log(email, password)
+
+      const res = await fetch("http://localhost:5000/adminlogin", {
+        method: "post",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({email, password})
+
+      })
+      const data = await res.json()
+      if(data.success === true ){
+        Swal.fire({
+            title:data.success,
+            text:"You are Login Successfully",
+            icon:"success"
+        })
+        setTimeout(()=>{
+             window.location.href = data.redirect
+        },1500)
+      }else{
+        Swal.fire({
+            title:"Login Denied",
+            text:data.msg||"success denied",
+            icon:"error"
+        })
+      }
+    })
+    
+</script>

@@ -1,0 +1,49 @@
+
+{{>navbar}}
+<main class="container mb-5">
+  <div class="row g-4 mb-5">
+    <div class="col-md-3">
+      <div class="card border-left-primary shadow-sm h-100 py-2">
+        <div class="card-body">
+          <a class="text-xs font-weight-bold text-primary text-uppercase mb-1" href="/admin/allUser">Total Users</a>
+          <div class="h5 mb-0 font-weight-bold text-gray-800" id="total_user">{{user}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-left-success shadow-sm h-100 py-2">
+        <div class="card-body">
+          <a href="/admin/allProduct" class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Products</a>
+          <div class="h5 mb-0 font-weight-bold text-gray-800" id="total_product">{{product}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-left-info shadow-sm h-100 py-2">
+        <div class="card-body">
+          <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Orders</div>
+          <div class="h5 mb-0 font-weight-bold text-gray-800" id="total_order">{{order}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-left-warning shadow-sm h-100 py-2">
+        <div class="card-body">
+          <a href="/admin/allCategory" class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Categories</a>
+          <div class="h5 mb-0 font-weight-bold text-gray-800" id="total_category">{{category}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white">
+      <h5 class="mb-0 text-dark">Sales Overview</h5>
+    </div>
+    <div class="card-body">
+      <canvas id="salesChart" style="max-height: 400px;"></canvas>
+    </div>
+  </div>
+</main>
+
+{{>footer}}

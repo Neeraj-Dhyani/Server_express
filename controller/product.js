@@ -9,8 +9,8 @@ const { trusted } = require("mongoose");
 const requireapinkey = require("../middleware/requireapinkey");
 const Category = require("../model/category")
 
-router.post("/uploadproduct", requireLogin, async(req, res)=>{
-    const {itemCode, name, price,  category, description, gst, note} = req.body;
+router.post("/uploadproduct", requireapinkey, async(req, res)=>{
+    const {itemCode, name, price,  category, description, gst, note, } = req.body;
 
     try {
         const verifyProduct = await Product.findOne({name})
@@ -25,32 +25,37 @@ router.post("/uploadproduct", requireLogin, async(req, res)=>{
         gst,
         description,
         note,
-        variants:[]
+        variants:[],
     })
     await newproduct.save();
-    res.status(200).json({msg:"product upload successfully!" , file:imagePath})
+    res.status(200).json({success:true, msg:"product upload successfully!"})
 
     } catch (error) {
-         res.status(500).json({ message: "Internal server error", error: err.message });
+         res.status(500).json({ message: "Internal server error", error: error.message });
     }
 
 })
 router.put("/uploadproductimg/:id",async(req, res)=>{
-    const busboy = Busboy({headers:req.headers})
+    const busboy = Busboy({
+        headers:req.headers,
+        limits:{
+            fileSize: 10 *1024*1024
+        }
+    })
     const {id} = req.params;
-    const color= '' 
-    const size = ''
-    const images = []
+    let color= '' 
+    let size = ''
+    let images = []
     const upload_image = path.join(__dirname, "../Produce_Image")
     if(!fs.existsSync(upload_image)){
         fs.mkdirSync(upload_image)
     }
     busboy.on("field", (filedname, value)=>{
-        if(filedname === "color") color=value;
-        if(filedname === size)color=value;
+        if(filedname === "color") color = value;
+        if(filedname === "size") size = value.split(/\s+/);
     })
     busboy.on("file", (fieldname, file, {filename})=>{
-        const savePath = path.join(upload_image, `${Date.now}-${filename}`)
+        const savePath = path.join(upload_image, `${Date.now()}-${filename}`)
         const writeSteam = fs.createWriteStream(savePath)
         file.pipe(writeSteam)
         images.push(savePath)
@@ -63,19 +68,21 @@ router.put("/uploadproductimg/:id",async(req, res)=>{
             res.status(404).json({msg:"product not found !!"}) 
         }
         await Product.findByIdAndUpdate(id, {$push:{variants:{color, size, images}}},{new:true});
-        res.status(200).json({msg:"image successfully added !"})
+        res.status(200).json({ success:true, msg:"image successfully added !"})
+        res.redirect("addVariant", {success: true})
     }catch(err){
         res.status(400).json({msg:"somthing went wrong!", Error:err})
+        res.redirect("addVariant", {error: false})
     }
     })
     req.pipe(busboy)
     
 })
+
 router.get("/getallProduct", requireapinkey,async (req, res)=>{
     try{
         let Productdb = await Product.find();
-        let ProductData = Productdb.map(emp=>emp.toObject());
-        res.status(200).json({product:ProductData});
+        res.status(200).json({product:Productdb});
     }catch(err){
         console.log(err);
     }
@@ -119,7 +126,7 @@ router.get("/searchProdcut", async(req, res)=>{
     }
 })
 
-router.put("/updatePriduct/:id", async(req, res)=>{
+router.put("/updateProduct/:id", async(req, res)=>{
     try{
         let id = req.params.id
         let body = req.body
@@ -135,7 +142,7 @@ router.delete("/deleteProduct/:id", async(req, res)=>{
    try{
     const id = req.params.id;
     await Product.findByIdAndDelete(id);
-    res.status(200).json({msg:"Product Deleted Successfully!"})
+    res.status(200).json({success:true, msg:"Product Deleted Successfully!"})
    }catch(err){
     console.log(err);
    }

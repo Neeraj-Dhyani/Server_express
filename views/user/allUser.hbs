@@ -1,0 +1,44 @@
+{{>navbar}}
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th scope="col">isBlock</th> 
+      <th scope="col">Name</th>
+      <th scope="col">Email</th>
+      <th scope="col">Phone</th>
+      <th scope="col">Address</th>
+      <th scope="col">Block</th>
+      <th scope="col">Unblock</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each User_data}}
+        <tr class="table-primary">
+        <th>{{this.isblock}}</th>
+
+        <th>{{this.name}}</th>
+        <th>{{this.email}}</th>
+        <th>{{this.phone}}</th>
+        <th>{{this.address}}</th>
+        <th>
+          <form action="/blockuser/{{this._id}}?_method=PUT" method="POST" style="display:inline;">
+          <button type="submit" style="border:none; background:none;">
+          Block
+            <i class="fas fa-user-alt-slash" style="font-size:36px; color:red;"></i>
+          </button>
+          </form>
+        </th>
+        <th>
+          <form action="/unblockuser/{{this._id}}?_method=PUT" method="POST" style="display:inline;">
+          <button type="submit" style="border:none; background:none;">
+            Unblock
+            <i class="fas fa-user-alt-slash" style="font-size:36px; color:red;"></i>
+          </button>
+          </form> 
+        </th>
+        </tr>
+        
+    {{/each}}
+  </tbody>
+</table>
+{{>footer}}

@@ -1,0 +1,52 @@
+{{>navbar}}
+<div class="container mt-5"> 
+    <div class="card shadow-lg p-4"> 
+    <h2 class="mb-4 text-primary">Add New Item</h2> 
+    <form id="product_form"> 
+        <div class="mb-3"> <label class="form-label">Item Code</label> <input type="text" name="itemCode" class="form-control" placeholder="Enter item code" required> </div> 
+        <div class="mb-3"> <label class="form-label">Item Name</label> <input type="text" name="name" class="form-control" placeholder="Enter item name" required> </div> 
+        <div class="mb-3"> <label class="form-label">Category</label> <input type="text" name="category" class="form-control" placeholder="Enter item category" required> </div> 
+        <div class="mb-3"> <label class="form-label">Price</label> <input type="number" name="price" class="form-control" placeholder="Enter price" required> </div> 
+        <div class="mb-3"> <label class="form-label">GST (%)</label> <input type="number" name="gst" class="form-control" placeholder="Enter GST %"> </div> 
+        <div class="mb-3"> <label class="form-label">Description</label> <textarea name="description" class="form-control" rows="3" placeholder="Enter description"></textarea>
+        </div> 
+        <div class="mb-3"> <label class="form-label">Note</label> <textarea name="note" class="form-control" rows="2" placeholder="Any note..."></textarea> </div>
+         <button class="btn btn-primary w-100">Add Item</button> 
+         </form> 
+         </div> 
+</div>
+
+
+{{>footer}}
+<script>
+    const key = {{{apikey}}}
+   const form = document.querySelector("#product_form")
+   form.addEventListener("submit", async(e)=>{
+    e.preventDefault()
+    let formdata = new FormData(form)
+    const data = Object.fromEntries(formdata.entries())
+     let res = await fetch(`http://localhost:5000/uploadproduct?key=${key}`,{
+        method:"post",
+        headers: { "Content-Type": "application/json" },
+        body:JSON.stringify(data)
+        })
+        const resdata = await res.json()
+        if(resdata.success === true){
+         Swal.fire({
+            title:resdata.success,
+            text:resdata.msg,
+            icon:"success"
+        })
+    }else{
+        console.log(resdata.error)
+         Swal.fire({
+            title:resdata.msg,
+            text:"somthing went rong",
+            icon:"error"
+        })
+    }
+    }) 
+    
+    
+   
+</script>

@@ -9,6 +9,7 @@ let productSchema = new Schema({
   gst: { type: String },  
   description: { type: String },
   note: { type: String },
+  // quantity:{type:Number, default:0},
   variants: [
     {
       color: String,

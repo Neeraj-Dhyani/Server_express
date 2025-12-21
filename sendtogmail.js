@@ -131,7 +131,7 @@ function CancelOrder(order, approveLink){
         <a href="${approveLink}" target="_blank">Approve Cancellation</a>
     `;
      transtport.sendMail({
-        from:"neerajdhyani47@gamil.com",
+        from:"neerajdhyani47@gmail.com",
         to:"tbisht333@gmail.com",
         subject:`Cancel request for Order # ${order._id}`,
         html:htmlBody

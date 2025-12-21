@@ -1,0 +1,85 @@
+{{>navbar}}
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th scope="col">Name</th>
+      <th scope="col">Price</th>
+      <th scope="col">Category</th>
+      <th scope="col">Quantity</th>
+      <th scope="col">Delete</th>
+      <th scope="col"> Edit</th>
+      <th scope="col">Upload Image/Varient</th>
+    </tr>
+  </thead>  
+  <tbody id="table_body">
+
+  </tbody>
+  
+</table>
+{{>footer}}
+<script>
+  let key = {{{apikey}}}
+    let table_body = document.querySelector("#table_body");
+    fetch(`http://localhost:5000/getallProduct?key=${key}`, {
+    }).then(item=>{return item.json()}).then((item)=>{
+      console.log(item)
+        let row  = document.createElement("tr")
+        item.product.forEach((item)=>{
+          row.innerHTML = 
+        `<td>${item.name}</td>
+          <td>${item.price}</td>
+
+          <td>${item.category}</td>
+          <td>${item.quantity}</td>
+          
+          <td>
+            <button class="btn btn-danger btn-sm delete-btn">
+              <span class="material-symbols-outlined" id="deleteProduct" data-id="${item._id}">delete</span>
+            </button>
+          </td>
+
+          <td>
+            <a href="/admin/editProduct/${item._id}" class="btn btn-success btn-sm">Edit</a>
+          </td>
+
+          <td>
+            <a href="/admin/addVariant/${item._id}" class="btn btn-success btn-sm">Add varient</a>
+          </td>
+        `;
+        })
+            table_body.appendChild(row)
+        })
+        .catch(err=>{
+        console.log(err)
+    })
+    document.addEventListener("click", (e)=>{
+      console.log(e)
+      if(e.target.id === "deleteProduct"){
+        Swal.fire({
+            title: "Do you want to Delete this Product?",
+            icon:"warning",
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: "Delete",
+            denyButtonText: `Don't Delete`
+        }).then((result) => {
+            if (result.isConfirmed) {
+            fetch(`http://localhost:5000/deleteProduct/${e.target.dataset.id}`, {
+            method:"delete"
+          }).then(item=>item.json())
+          .then(data=>{
+            if(data.success === true){
+               Swal.fire(data.msg, "", "success");
+            }
+          }).catch(err=>{
+             Swal.fire("Somthing Went Wrong!", "", "error");;
+          })
+           
+           } else if (result.isDenied) {
+           Swal.fire("Denied", "", "info");
+          }
+        });
+         
+      }
+    })
+</script>
