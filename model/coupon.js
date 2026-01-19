@@ -3,11 +3,12 @@ const {Schema} = mongoose;
 
 const couponSchema = new Schema({
     code:{type:String, required:true, uinque:true},
-    discountType:{type:String, enum:["percentage", "fixed"], uinque:true},
+    discountType:{type:String, enum:["percentage", "flat"], uinque:true},
     discountValue:{type:Number, required:true},
     minOrderAmount:{type:Number, default:0},
     maxDiscount:{type:Number, default:null},
-    expiryDate:{type:Date, require:true},
+    description:{type:String},
+    expiryDate:{type:Date, required:true},
     maxUsage:{type: Number, default:null},
     useCount:{type:Number, default:0},
     active:{type:Boolean, default:true}

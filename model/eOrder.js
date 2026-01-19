@@ -10,6 +10,12 @@ const orderShema = new Schema({
   customerName:{
     type:String
   },
+  customerEmail:{
+    type:String
+  },
+  customerPhone:{
+    type:String
+  },
    products:[
      {
       productID: {
@@ -30,6 +36,10 @@ const orderShema = new Schema({
         type: Number,
         required: true
       },
+      includes:{
+        type: String,
+        default: "No Includes"
+      }
     }
   ],
   customerAddress:{

@@ -6,14 +6,13 @@ const jwt = require("jsonwebtoken");
 const requireLogin = require("../middleware/requireLogin");
 const Product  = require("../model/product");
 const Order = require("../model/eOrder");
-const {SendOrdertoGmail, CancelOrder}= require("../sendtogmail");
+const {SendOrdertoGmail} = require("../utilities/sendtogmail");
 const lookup = require("country-code-lookup")
 const crypto = require("crypto");
-const {VerificationCode} = require('../SendVerificationCode');
+const {VerificationCode} = require('../utilities/SendVerificationCode');
 const pwnedpassword = require('pwnedpasswords');
 const Coupon = require("../model/coupon");
-const { json } = require('stream/consumers');
-const coupon = require('../model/coupon');
+const {generateInvoice} = require("../utilities/invoice")
 require("dotenv").config();
 
 // ------------------------------user register----------------------------------------------->
@@ -201,13 +200,14 @@ router.delete("/deleteUser", requireLogin, async(req, res, next)=>{
 // --------------------------------add to cart------------------------------------------------>
 router.put("/addtocart", requireLogin, async(req, res, next)=>{
     let userid = req.appuser._id
-    let {product_id, quantity} = req.body
+    let {product_id, quantity, includesproduct} = req.body
 
     try{
         let productdata = await Product.findById(product_id)
         const image = productdata.variants[0].images[0];
         const price = productdata.price;
         const name = productdata.name;
+        const includes = includesproduct
         console.log(productdata);
         let user = await User.findById(userid)
         let itemindex = user.cart.findIndex((item) => {
@@ -217,7 +217,7 @@ router.put("/addtocart", requireLogin, async(req, res, next)=>{
         if(itemindex > -1 ){
             user.cart[itemindex].quantity += quantity;
         }else{
-            user.cart.push({product:product_id, quantity, image, price, name});
+            user.cart.push({product:product_id, quantity, image, price, name, includes});
         }
         await user.save();
         return res.status(200).json({ message: "Product added to cart", cart: user.cart });
@@ -336,13 +336,15 @@ router.post("/applycode", requireLogin, async(req, res, next)=>{
 router.post("/placeOrder", requireLogin, async(req, res)=>{
     // console.log(req.appuser);
     const {cart, totalPrice} = req.body;
-    const user_Id = req.appuser._id;
-    const user_name = req.appuser.name
+    const customer_Id = req.appuser._id;
+    const customer_name = req.appuser.name
     const customer_Address = req.appuser.address
+    const customer_Email = req.appuser.email
+    const customer_Phone = req.appuser.phone
     // const findproduct= req.appuser.cart.find((item)=>item.product == productID);
     // const quantity = findproduct.quantity;
     if(!cart || cart.length === 0){
-        return res.status(404).json({msg:"Cart is empty please Add somthing in cart"}) 
+        return res.status(404).json({msg:"Cart is empty please Add Somthing in Cart"}) 
     }
 
     try{
@@ -352,11 +354,14 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
                 name: item.name,
                 quantity: item.quantity,
                 price: item.price,
+                includes: item.includes
             }
         })
         const customer_Order = new Order({
-            customerID:user_Id,
-            customerName:user_name,
+            customerID:customer_Id,
+            customerName:customer_name,
+            customerEmail:customer_Email,
+            customerPhone:customer_Phone,
             products:product,
             customerAddress: customer_Address,
             totalAmount: totalPrice
@@ -377,25 +382,42 @@ router.post("/placeOrder", requireLogin, async(req, res)=>{
     }
 
 });
-router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
-   const { order_id }= req.body;
-   try{
-    if(!order_id){
-        return res.status(400).json({msg:"Order ID required"})
+router.get("/createInvoice/:id", async(req, res, next)=>{
+    const id = req.params.id
+    if(!id){
+        return res.status(404).json({msg:"No Product ID"})
     }
-    const order = await Order.findById(order_id);
-    if(!order){
-        return res.status(404).json({msg:"Oder not found"})
+    try{
+        const order = await Order.findById(id)
+        if(!order){
+            return res.status(404).json({msg:"No Product Found"})
+        }
+        const pdfPath = await generateInvoice(order)
+        console.log(pdfPath)
+        res.status(200).json({path:pdfPath})
+    }catch(err){
+        next(err)
     }
-    if(order.status === "delivered"){
-        return res.status(400).json({msg:"this product delivered"})    
-    }
-    order.status = "Cancel"
-    await order.save();
-    CancelOrder(order);
-   }catch(err){
-    next(err)
-   }
 })
+// router.post("/cancelOrder", requireLogin, async(req, res, next)=>{
+//    const { order_id }= req.body;
+//    try{
+//     if(!order_id){
+//         return res.status(400).json({msg:"Order ID required"})
+//     }
+//     const order = await Order.findById(order_id);
+//     if(!order){
+//         return res.status(404).json({msg:"Oder not found"})
+//     }
+//     if(order.status === "delivered"){
+//         return res.status(400).json({msg:"this product delivered"})    
+//     }
+//     order.status = "Cancel"
+//     await order.save();
+//     CancelOrder(order);
+//    }catch(err){
+//     next(err)
+//    }
+// })
 
 module.exports = router;

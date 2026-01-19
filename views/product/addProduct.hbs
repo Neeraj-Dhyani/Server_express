@@ -3,17 +3,70 @@
     <div class="card shadow-lg p-4"> 
     <h2 class="mb-4 text-primary">Add New Item</h2> 
     <form id="product_form"> 
-        <div class="mb-3"> <label class="form-label">Item Code</label> <input type="text" name="itemCode" class="form-control" placeholder="Enter item code" required> </div> 
-        <div class="mb-3"> <label class="form-label">Item Name</label> <input type="text" name="name" class="form-control" placeholder="Enter item name" required> </div> 
-        <div class="mb-3"> <label class="form-label">Category</label> <input type="text" name="category" class="form-control" placeholder="Enter item category" required> </div> 
-        <div class="mb-3"> <label class="form-label">Price</label> <input type="number" name="price" class="form-control" placeholder="Enter price" required> </div> 
-        <div class="mb-3"> <label class="form-label">GST (%)</label> <input type="number" name="gst" class="form-control" placeholder="Enter GST %"> </div> 
-        <div class="mb-3"> <label class="form-label">Description</label> <textarea name="description" class="form-control" rows="3" placeholder="Enter description"></textarea>
+        <div class="mb-3">
+            <label class="form-label">Item Code</label> 
+            <input type="text" name="itemCode" class="form-control" placeholder="Enter item code" required> 
         </div> 
-        <div class="mb-3"> <label class="form-label">Note</label> <textarea name="note" class="form-control" rows="2" placeholder="Any note..."></textarea> </div>
-         <button class="btn btn-primary w-100">Add Item</button> 
-         </form> 
-         </div> 
+        <div class="mb-3"> 
+            <label class="form-label">Item Name</label> 
+            <input type="text" name="name" class="form-control" placeholder="Enter item name" required> 
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label">Product Title</label> 
+            <input type="text" name="product_title" class="form-control" rows="2" placeholder="Enter Product Title">
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">Product Details</label> 
+            <input type="text" name="product_details" class="form-control" rows="2" placeholder="Enter Product Details">
+        </div> 
+        
+        <div class="mb-3"> 
+            <label class="form-label">Category</label> 
+            <input type="text" name="category" class="form-control" placeholder="Enter item category" required> 
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">Price</label> 
+            <input type="number" name="price" class="form-control" placeholder="Enter price" required> 
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">GST (%)</label> 
+            <input type="number" name="gst" class="form-control" placeholder="Enter GST %"> 
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">Description</label> 
+            <input type="text" name="description" class="form-control" rows="3" placeholder="Enter description">
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">Note</label> 
+            <textarea name="note" class="form-control" rows="2" placeholder="Any note..."></textarea> 
+        </div> 
+        <div class="mb-3"> 
+            <label class="form-label">fabric</label> 
+            <input type="text" name="fabric" class="form-control" rows="2" placeholder="fabric"> 
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label">Neckline</label> 
+            <input type="text" name="neckline" class="form-control" rows="2" placeholder="Nackline">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Sleeve Length</label> 
+            <input  type="text" name="sleeve_length" class="form-control" rows="2" placeholder="Sleeve Length">
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label">Occasion</label> 
+            <input  type="text" name="occasion" class="form-control" rows="2" placeholder="Occasion"> 
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label">Wash Care</label> 
+            <input type="text" name="wash_care" class="form-control" rows="2" placeholder="Wash Care">
+        </div>
+        <div class="mb-3"> 
+            <label class="form-label">Size & Fit note</label> 
+            <input name="size_and_fit_note" class="form-control" rows="2" placeholder="Size & Fit Note">
+        </div>
+        <button class="btn btn-primary w-100">Add Item</button> 
+    </form> 
+    </div> 
 </div>
 
 
@@ -25,9 +78,13 @@
     e.preventDefault()
     let formdata = new FormData(form)
     const data = Object.fromEntries(formdata.entries())
-     let res = await fetch(`http://localhost:5000/uploadproduct?key=${key}`,{
+    console.log(data)
+     let res = await fetch(`/uploadproduct`,{
         method:"post",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "x-admin-api-key": `${key}`,
+            "Content-Type": "application/json",
+            },
         body:JSON.stringify(data)
         })
         const resdata = await res.json()

@@ -2,16 +2,16 @@ const express = require("express")
 const requireAdminLogin = require("../middleware/adminRequireLogin")
 const Product  = require("../model/product")
 const User = require("../model/eUser")
-const Oder = require("../model/eOrder")
+const Order = require("../model/eOrder")
 const Category = require("../model/category")
-const { assign } = require("nodemailer/lib/shared")
+const Coupon  = require("../model/coupon")
 const routers  = express.Router()
 
 
 routers.get("/home",  requireAdminLogin, async(req, res)=>{
     const total_user = await User.countDocuments()
     const total_product = await Product.countDocuments()
-    const total_order  = await Oder.countDocuments()
+    const total_order  = await Order.countDocuments()
     const totall_category = await Category.countDocuments()
     
     res.render("home", {
@@ -53,5 +53,43 @@ routers.get("/allUser", requireAdminLogin, async(req, res, next)=>{
         }catch(err){
             next(err)
         }
+})
+routers.get("/createBanner", requireAdminLogin, async(req, res)=>{
+    res.render("baner/addBanner", {apikey:JSON.stringify(process.env.ADMIN_API_KEY)})
+})
+routers.get("/allBanners", requireAdminLogin, async(req, rez)=>{
+    res.render("baner/allBanner")
+})
+routers.get("/createCoupon", requireAdminLogin, (req, res)=>{
+    res.render("coupon/createCoupon", {apikey:JSON.stringify(process.env.ADMIN_API_KEY)})
+})
+routers.get("/allCoupons", requireAdminLogin, async(req, res)=>{
+    try{
+        let allCoupon = await Coupon.find().lean()
+        res.render("coupon/allCoupon", {coupon:allCoupon, apikey:JSON.stringify(process.env.ADMIN_API_KEY)})
+    }catch(err){
+
+    }
+
+    
+})
+routers.get("/allOrders", requireAdminLogin, async(req, res)=>{
+    try{
+        const all_orders = await Order.find().lean()
+        res.render("orders/allOrders", {orders:all_orders, apikey:process.env.ADMIN_API_KEY})
+    }catch(err){
+        console.log(err)
+    }
+   
+})
+routers.get("/viewOrder/:id", requireAdminLogin, async(req, res)=>{
+    try{
+        let id  = req.params.id;
+        let order = await Order.findById({_id:id}).lean()
+        // console.log(order)
+        res.render("orders/orders_detail", {order})
+    }catch(err){
+        console.log(err)
+    }
 })
 module.exports = routers

@@ -20,11 +20,17 @@
 <script>
   let key = {{{apikey}}}
     let table_body = document.querySelector("#table_body");
-    fetch(`http://localhost:5000/getallProduct?key=${key}`, {
+    fetch(`http://localhost:5000/getallProduct`,{
+      method:"get",
+      headers: { 
+            "x-admin-api-key": `${key}`,
+            "Content-Type": "application/json",
+            },
     }).then(item=>{return item.json()}).then((item)=>{
-      console.log(item)
-        let row  = document.createElement("tr")
+      //console.log(item)
         item.product.forEach((item)=>{
+          let row  = document.createElement("tr")
+          //console.log(item)
           row.innerHTML = 
         `<td>${item.name}</td>
           <td>${item.price}</td>
@@ -46,8 +52,9 @@
             <a href="/admin/addVariant/${item._id}" class="btn btn-success btn-sm">Add varient</a>
           </td>
         `;
+        table_body.appendChild(row)
         })
-            table_body.appendChild(row)
+            
         })
         .catch(err=>{
         console.log(err)
@@ -64,7 +71,7 @@
             denyButtonText: `Don't Delete`
         }).then((result) => {
             if (result.isConfirmed) {
-            fetch(`http://localhost:5000/deleteProduct/${e.target.dataset.id}`, {
+            fetch(`/deleteProduct/${e.target.dataset.id}`, {
             method:"delete"
           }).then(item=>item.json())
           .then(data=>{

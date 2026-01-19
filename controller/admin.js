@@ -71,7 +71,10 @@ router.post("/adminlogin", async(req, res, next)=>{
         next(err)
     }
 })
-
+router.get("/logout", (req, res, next)=>{
+    res.clearCookie("token");
+    res.redirect("/login")
+})
 router.get("/apikeygenerator", async(req, res, next)=>{
     try{
         function generateapikey(){
@@ -88,13 +91,13 @@ router.get("/apikeygenerator", async(req, res, next)=>{
         next(err)
     }
 })
-router.post("/createcategory", requireapinkey,async(req, res, next)=>{
+router.post("/createCategory", requireapinkey,async(req, res, next)=>{
     const {name} = req.body;
     try{
         const slug = slugify(name, {lower:true})
         const newCategory = await Category.create({name, slug})
         res.status(200).json({success:true, msg:"cotegory careated successfully"})
-        res.redirect("addCategory", {success:true})
+        
     }catch(err){
         next(err)
         res.redirect("addCartegory", {error:false})
@@ -181,12 +184,13 @@ router.get("/getallorder", requireapinkey, async(req, res, next)=>{
         next(err)
     }
 })
-router.put("/updateorderstatus", requireapinkey, async(req, res, next)=>{
-    const {id} = req.query 
+router.put("/updateorderstatus/:id", async(req, res, next)=>{
+    const id = req.params.id 
     const {order_status} = req.body
     try{
         const update_order_status  = await Order.findByIdAndUpdate(id, {status:order_status}, {new:true})
-        res.status(200).json({msg:"order status change successfully"})
+        res.status(200).json({success:true, msg:"order status change successfully"})
+        res.render("/orders/allOrders")
     }catch(err){
         next(err)
     }
@@ -219,7 +223,7 @@ router.post("/createbanner", requireapinkey, async(req, res, next)=>{
      busboy.on("finish", async()=>{
         try{
             const new_banner = await Banner.create({title, subtitle, offer, coupon, image:images[0]})
-            res.status(200).json({msg:"Banner create successfully"})
+            res.status(200).json( {success:true, msg:"Banner create successfully"})
         }catch(err){
             res.status(400).json({msg:"somthing went wrong!", Error:err})
         }
@@ -230,28 +234,30 @@ router.delete("deletebanner/:id", requireapinkey, async(req, res, next)=>{
     const {id} = req.params
     try{
         await Banner.findByIdAndDelete(id)
-        res.status(200).json({msg:"Banner Deleted successfully"})
+        res.status(200).json({success: true, msg:"Banner Deleted successfully"})
     }catch(err){
         next(err)
     }
 })
-router.post("/creatcouponcode", requireapinkey, async(req, res, next)=>{
+router.post("/createCouponCode", requireapinkey, async(req, res, next)=>{
     const { 
         discountType,
         discountValue,
         minOrderAmount,
         maxDiscount,
         expiryDate,
-        maxUsage
+        maxUsage,
+        description,
     } = req.body
-    const  code = ()=>{
-        return crypto.randomBytes(4).toString("hex").toUpperCase
-    }
+    let code = ""
+    code = String(crypto.randomBytes(4).toString("hex").toUpperCase());
+      
    try{
      const new_coupon = await Coupon.create({
         code,
         discountType,
         discountValue,
+        description,
         minOrderAmount,
         maxDiscount,
         expiryDate,
@@ -259,9 +265,17 @@ router.post("/creatcouponcode", requireapinkey, async(req, res, next)=>{
     })
     res.status(201).json({success:true, msg:"coupon code successfully created", coupon:new_coupon})
    }catch(err){
+    console.log(err)
     next(err)
    }
 
+})
+router.patch("/deactivCouponcode/:id",  requireapinkey, async(req, res, next)=>{
+    try{
+        await Coupon.findByIdAndUpdate(req.params.id, {active:false})
+    }catch(err){
+        next(err)
+    }
 })
 router.delete("deletecouponcode/:id", requireapinkey, async(req, res, next)=>{
     try{

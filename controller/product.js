@@ -8,9 +8,15 @@ const requireLogin = require("../middleware/requireLogin");
 const { trusted } = require("mongoose");
 const requireapinkey = require("../middleware/requireapinkey");
 const Category = require("../model/category")
+const cloudinary = require("cloudinary").v2
+cloudinary.config({
+    cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
+    api_key : process.env.CLOUDINARY_API_KEY,
+    api_secret : process.env.CLOUDINARY_API_SECRET 
+})
 
 router.post("/uploadproduct", requireapinkey, async(req, res)=>{
-    const {itemCode, name, price,  category, description, gst, note, } = req.body;
+    const {itemCode, name, price,  category, description, gst, note, product_title, product_details, fabric, neckline, sleeve_length, occasion, wash_care, size_and_fit_note,  } = req.body;
 
     try {
         const verifyProduct = await Product.findOne({name})
@@ -20,11 +26,20 @@ router.post("/uploadproduct", requireapinkey, async(req, res)=>{
         const newproduct  =  new Product({
         itemCode, 
         name,
+        product_details,
+        product_title,
         category,
         price,
+        fabric,
+        neckline,
+        sleeve_length,
+        occasion,
+        wash_care,
         gst,
         description,
+        size_and_fit_note,
         note,
+
         variants:[],
     })
     await newproduct.save();
@@ -39,40 +54,61 @@ router.put("/uploadproductimg/:id",async(req, res)=>{
     const busboy = Busboy({
         headers:req.headers,
         limits:{
-            fileSize: 10 *1024*1024
+            fileSize: 10*1024*1024
         }
     })
     const {id} = req.params;
     let color= '' 
     let size = ''
     let images = []
-    const upload_image = path.join(__dirname, "../Produce_Image")
-    if(!fs.existsSync(upload_image)){
-        fs.mkdirSync(upload_image)
-    }
+    let all_UploadResults = []
     busboy.on("field", (filedname, value)=>{
         if(filedname === "color") color = value;
         if(filedname === "size") size = value.split(/\s+/);
     })
-    busboy.on("file", (fieldname, file, {filename})=>{
-        const savePath = path.join(upload_image, `${Date.now()}-${filename}`)
-        const writeSteam = fs.createWriteStream(savePath)
-        file.pipe(writeSteam)
-        images.push(savePath)
+    busboy.on("file", (fieldname, file, info)=>{
+        try{
+            const uploadResult = new Promise((resolve, reject)=>{
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                    folder:"Product_image",
+                    resource_type:"image"
+                    }, 
+                    (error, result)=>{
+                        if(error){
+                            reject(error)
+                        }
+                        if(!result||!result.secure_url){
+                            return reject(new Error("Cloudnary retrun no result"))
+                        }
+                        const imageData = {url:result.secure_url}
+                        images.push(imageData)
+                        resolve(result.secure_url)
+                    })
+                    file.pipe(stream)
+            })
+            all_UploadResults.push(uploadResult)
+        }catch(err){
+            console.log("cloudinary upload error : " ,err)
+        }
     })
     // const images= req.files.map(file => file.path.replace(/\\/g, "/"));
     busboy.on("finish", async()=>{
         try{
+        await Promise.all(all_UploadResults)
+        if (!images.length) {
+        return res.status(400).json({ msg: "No images uploaded" });
+        }
         const verifyProduct = await Product.findById(id)
         if(!verifyProduct){
             res.status(404).json({msg:"product not found !!"}) 
         }
         await Product.findByIdAndUpdate(id, {$push:{variants:{color, size, images}}},{new:true});
-        res.status(200).json({ success:true, msg:"image successfully added !"})
-        res.redirect("addVariant", {success: true})
+        // res.status(200).json({ success:true, msg:"image successfully added !"})
+        return res.redirect(`/admin/addVariant/${id}`)
     }catch(err){
-        res.status(400).json({msg:"somthing went wrong!", Error:err})
-        res.redirect("addVariant", {error: false})
+        // res.status(400).json({msg:"somthing went wrong!", Error:err})
+        res.redirect(`/admin/addVariant/${id}`, {success:true})
     }
     })
     req.pipe(busboy)

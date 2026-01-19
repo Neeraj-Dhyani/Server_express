@@ -1,0 +1,128 @@
+<div class="container my-5">
+  <div class="row g-4">
+
+    {{#each coupon}}
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow border-0 h-100">
+
+        <!-- Header -->
+        <div class="card-header d-flex justify-content-between align-items-center
+          {{#if active}}bg-success{{else}}bg-danger{{/if}} text-white">
+          <span class="fw-bold">{{code}}</span>
+          <span class="badge bg-light text-dark">
+            {{#if active}}Active{{else}}Inactive{{/if}}
+          </span>
+        </div>
+
+        <!-- Body -->
+        <div class="card-body">
+
+          <p class="mb-2">
+            <strong>Discount:</strong>
+            {{#if (equal discountType "percentage")}}
+              {{discountValue}}%
+            {{else}}
+              ₹{{discountValue}}
+            {{/if}}
+          </p>
+
+          <p class="mb-2">
+            <strong>Min Order:</strong> ₹{{minOrderAmount}}
+          </p>
+
+          <p class="mb-2">
+            <strong>Max Discount:</strong> ₹{{maxDiscount}}
+          </p>
+
+          <p class="mb-2">
+            <strong>Usage:</strong> {{useCount}} / {{maxUsage}}
+          </p>
+
+          <p class="mb-2">
+            <strong>Expiry Date:</strong> {{Date expiryDate}}
+          </p>
+          <p class="mb-2" >
+            <strong>Expiry:</strong>{{#if (checkExpiry expiryDate)}}
+            <span class="expiry-status" data-id="{{_id}}">Not Expired</span>
+            {{else}}
+            <span id="expiry" data-id="{{_id}}">Expired</span>  
+            {{/if}}
+          </p>
+
+
+          <p class="text-muted small">
+            {{description}}
+          </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="card-footer text-end bg-transparent">
+          <a href="/admin/coupons/edit/{{_id}}" class="btn btn-warning btn-sm">Edit</a>
+          <a href="http://delete/{{_id}}" class="btn btn-danger btn-sm">Delete</a>
+        </div>
+
+      </div>
+    </div>
+    {{/each}}
+  </div>
+</div>
+<script>
+
+    const key = {{{apikey}}}
+    let expiry = document.querySelectorAll(".expiry-status")
+
+    async function deactive(id){
+        try{
+            await fetch(`deactivCouponcode/${id}`, {
+                method:"post",
+                headers:{
+                "x-admin-api-key": `${key}`,
+                "Content-Type": "application/json",
+            },
+            })
+        }catch(err){
+            conosle.log(err)
+        }
+    }
+    expiry.forEach(data=>{
+        let id = data.dataset.id
+        let status = data.innerText
+        console.log(id)
+        if(data.innerText === "Expired"){
+            deactive(id)
+        }
+        return
+    })
+    function deleteCoupon(id){
+      try{
+        const res = await fetch(`"deletebanner/${id}`, {
+                              method:"post",
+                              headers:{
+                                "x-admin-api-key": `${key}`,
+                                "Content-Type": "application/json",
+                              },
+                        })
+        const data = await res.json()
+        if(data.success === ture){
+          icon: 'success',
+          title: 'Coupon Added',
+          text: 'Coupon Deleted Successfully!',
+          confirmButtonColor: '#0d6efd'
+        }else{
+          Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Coupon not added. Please try again.',
+          confirmButtonColor: '#dc3545'
+        })
+        }
+      }catch(err){
+        Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: `server error ${err}`,
+        confirmButtonColor: '#dc3545'
+      })
+    }}
+</script>

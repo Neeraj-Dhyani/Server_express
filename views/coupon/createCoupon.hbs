@@ -1,0 +1,152 @@
+{{>navbar}}
+<div class="container my-5" style="max-width: 720px;">
+
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white fw-bold">
+      Create New Coupon
+    </div>
+
+    <div class="card-body">
+      <form id="coupon_form">
+
+      
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Discount Type</label>
+          <select name="discountType" class="form-select" required>
+            <option value="" disabled selected>Select type</option>
+            <option value="percentage">Percentage (%)</option>
+            <option value="flat">Flat Amount (₹)</option>
+          </select>
+        </div>
+
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Discount Value</label>
+          <input
+            type="number"
+            name="discountValue"
+            class="form-control"
+            placeholder="e.g. 10 or 500"
+            min="1"
+            required
+          >
+        </div>
+
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Minimum Order Amount (₹)</label>
+          <input
+            type="number"
+            name="minOrderAmount"
+            class="form-control"
+            placeholder="e.g. 2000"
+            min="0"
+          >
+        </div>
+
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Maximum Discount (₹)</label>
+          <input
+            type="number"
+            name="maxDiscount"
+            class="form-control"
+            placeholder="e.g. 1000"
+            min="0"
+          >
+          <div class="form-text">
+            Applies only for percentage coupons
+          </div>
+        </div>
+
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Expiry Date</label>
+          <input
+            type="date"
+            name="expiryDate"
+            class="form-control"
+            required
+          >
+        </div>
+
+        
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Maximum Usage</label>
+          <input
+            type="number"
+            name="maxUsage"
+            class="form-control"
+            placeholder="e.g. 100"
+            min="1"
+            required
+          >
+        </div>
+        <div class="mb-3"> <label class="form-label">Description</label> <textarea name="description" class="form-control" rows="2" placeholder="Any note..."></textarea> </div>
+        
+        <div class="d-flex justify-content-end gap-2">
+          <a href="/admin/coupons" class="btn btn-secondary">
+            Cancel
+          </a>
+          <a href="/admin/allCoupons" class="btn btn-secondary">
+            All Coupon
+          </a>
+          <button type="submit" class="btn btn-success" id="submit">
+            Create Coupon
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+  
+
+</div>
+<script>
+    const key = {{{apikey}}}
+    
+    const form_data = document.getElementById("coupon_form")
+    
+   
+    try{
+    
+    form_data.addEventListener("submit", async(e)=>{
+      const data = new FormData(form_data)
+      const payload = Object.fromEntries(data.entries())
+      e.preventDefault()
+        const res = await fetch("http://localhost:5000/createCouponCode", {
+            method:"post",
+            headers:{
+                "x-admin-api-key": `${key}`,
+                "Content-Type": "application/json",
+            },
+            body:JSON.stringify(payload)
+            })
+    const result = await res.json()
+    console.log(result)
+    if(result.success === true){
+       Swal.fire({
+    icon: 'success',
+    title: 'Coupon Added',
+    text: 'Coupon added successfully!',
+    confirmButtonColor: '#0d6efd'
+    })
+    }else{
+    Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: 'Coupon not added. Please try again.',
+    confirmButtonColor: '#dc3545'
+    })
+    }
+  })
+    }catch(err){
+      Swal.fire({
+    icon: 'error',
+    title: 'Server Error',
+    text: `server error ${err}`,
+    confirmButtonColor: '#dc3545'
+    })
+    }
+  
+</script>

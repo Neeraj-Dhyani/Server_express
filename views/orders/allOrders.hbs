@@ -1,0 +1,119 @@
+{{>navbar}}
+<div class="container mt-4">
+
+    <h2 class="mb-4 text-info">All Orders</h2>
+
+    {{#if orders.length}}
+    <div class="table-responsive">
+        <table class="table table-dark table-bordered table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Change Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each orders}} 
+                <tr>
+                    <td>{{increament @index}}</td>
+                    <td>{{this._id}}</td>
+
+                    <td>
+                        {{this.customerName}}
+                    </td>
+
+                    <td>
+                        {{this.customerEmail}}
+                    </td>
+
+                    <td>₹{{this.totalAmount}}</td>
+
+                    <td>
+                        {{#if (or 
+                            (equal this.status "pendin")
+                            (equal this.status "deliverd")
+                            (equal this.status "processing") 
+                            (equal this.status "shiped")
+                            )}}
+                            <span class="badge bg-warning">{{this.status}}</span>
+                        
+                        {{else}}
+                            <span class="badge bg-secondary">{{this.status}}</span>
+                        {{/if}}
+                    </td>
+
+                    <td>{{Date this.orderDate}}</td>
+
+                    <td>
+                        <a href="/admin/viewOrder/{{this._id}}" style="text-decoration: none";>
+                        <button class="btn btn-sm btn-info"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#items-{{this._id}}">
+                            View
+                        </button>
+                        </a>
+                    </td>
+                    <td>
+                    <form method="POST" action="/updateorderstatus/{{_id}}?_method=PUT">
+                        <select
+                        name="order_status"
+                        class="form-select form-select-sm bg-dark text-light"
+                        onchange="this.form.submit()"
+                        id="my_selcation"
+                        >
+                    
+
+                        <option value="pending" {{#if (equal status "pending")}}selected{{/if}}>
+                            Pending
+                        </option>
+
+                        <option value="processing" {{#if (equal status "processing")}}selected{{/if}}>
+                            Processing
+                        </option>
+
+                        <option value="shipped" {{#if (equal status "shipped")}}selected{{/if}}>
+                            Shipped
+                        </option>
+
+                        <option value="delivered" {{#if (equal status "delivered")}}selected{{/if}}>
+                            Delivered
+                        </option>
+
+                        <option value="cancelled" {{#if (equal status "cancelled")}}selected{{/if}}>
+                            Cancelled
+                        </option>
+
+                        </select>
+                    </form>
+                    </td>
+                </tr>
+
+                <!-- Products -->
+                <tr class="collapse bg-dark" id="items-{{this._id}}">
+                    <td colspan="8">
+                        <ul class="list-group">
+                            {{#each this.products}}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>{{this.name}} (x{{this.quantity}})</span>
+                                    <span>₹{{this.price}}</span>
+                                </li>
+                            {{/each}}
+                        </ul>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+    {{else}}
+        <div class="alert alert-warning">No orders found</div>
+    {{/if}}
+
+</div>

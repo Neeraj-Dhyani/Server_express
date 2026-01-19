@@ -12,7 +12,13 @@
 </table>
 <script>
      let table_body = document.querySelector("#table_body");
-    fetch("http://localhost:5000/getallcategory?key=4eee4f5e4bb456e050fe19f4dbe1f5d1b4f605b231105e268896f74788342a6b", {
+     let key = {{{apikey}}}
+    fetch("http://localhost:5000/getallcategory",{
+      method:"get",
+      headers: { 
+            "x-admin-api-key": `${key}`,
+            "Content-Type": "application/json",
+            },
     }).then(item=>{return item.json()}).then((item)=>{
       console.log(item)
         let row  = document.createElement("tr")
@@ -48,7 +54,7 @@
             denyButtonText: `Don't Delete`
         }).then((result) => {
             if (result.isConfirmed) {
-            fetch(`http://localhost:5000/deletecategory/${e.target.dataset.id}`, {
+            fetch(`deletecategory/${e.target.dataset.id}`, {
             method:"delete"
           }).then(item=>item.json())
           .then(data=>{

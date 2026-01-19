@@ -1,9 +1,9 @@
+{{>navbar}}
 <h2 class="text-center text-primary mb-4">Edit Product</h2>
 
-<form method="post" action="http://localhost:5000/updateProduct/{{product_data._id}}?_method=PUT">
+<form id="form_data">
   <div class="container">
     <div class="card shadow-lg p-4">
-      
       <div class="row">
         <div class="col-md-6 mb-3">
           <label class="form-label">Item Code</label>
@@ -26,8 +26,24 @@
             required
           >
         </div>
+        <div class="mb-3">
+        <label class="form-label">Product Titel</label>
+        <input
+          class="form-control"
+          name="product_titel"
+          rows="2"
+          value="{{product_data.product_title}}"
+        >
       </div>
-
+      <div class="mb-3">
+        <label class="form-label">Product Details</label>
+        <input
+          class="form-control"
+          name="product_details"
+          rows="2"
+          value="{{product_data.product_detail}}"
+        >
+      </div>
       <div class="row">
         <div class="col-md-6 mb-3">
           <label class="form-label">Category</label>
@@ -77,8 +93,53 @@
           rows="2"
         >{{product_data.note}}</textarea>
       </div>
-
-      <div class="d-flex justify-content-between mt-4">
+      <div class="mb-3">
+        <label class="form-label">Fabric</label>
+        <input
+          class="form-control"
+          name="fabric"
+          rows="2"
+          value="{{product_data.fabric}}"
+        >
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Neckline</label>
+        <input
+          class="form-control"
+          name="neckline"
+          rows="2"
+          value="{{product_data.neckline}}"
+        >
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Occasios</label>
+        <input
+          class="form-control"
+          name="occassion"
+          rows="2"
+          value="{{product_data.occasion}}"
+        >
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Sleeve Length</label>
+        <input
+          class="form-control"
+          name="sleeve_length"
+          rows="2"
+          value="{{product_data.sleeve_length}}"
+        >
+      </div>
+      <div class="mb-3">
+        <label class="form-label">size & fit note</label>
+        <input
+          class="form-control"
+          name="size_and_fit_note"
+          rows="2"
+          value="{{product_data.size_and_fit_note}}"
+        >
+      </div>
+      </div>
+       <div class="d-flex justify-content-between mt-4">
         <a href="/admin/allProduct" class="btn btn-outline-secondary">
           Cancel
         </a>
@@ -86,7 +147,43 @@
           Update Product
         </button>
       </div>
-
     </div>
   </div>
 </form>
+<script>
+  const id = {{{product_data._id}}}
+  const form = document.querySelector("form_data")
+  
+  form.addEventListener("submit", async()=>{
+    const form_data = new FormData(form)
+    const payload = Object.fromEntries(form_data.entries())
+    console.log(form_data)
+    try{
+      const res = await fetch(`updateProduct/${id}`, ,{
+        method:"post",
+        headers: { 
+            "Content-Type": "application/json",
+            },
+        body:JSON.stringify(payload)
+        })
+    const data = await res.json()
+    if(data.success === true){
+         Swal.fire({
+            title:resdata.success,
+            text:resdata.msg,
+            icon:"success"
+        })
+    }else{
+        console.log(data.error)
+         Swal.fire({
+            title:resdata.msg,
+            text:"somthing went rong",
+            icon:"error"
+        })
+    }      
+    }catch(err){
+
+    }
+  })
+
+</script>

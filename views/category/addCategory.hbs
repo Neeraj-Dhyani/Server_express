@@ -1,8 +1,9 @@
+{{>navbar}}
 <div class="container mt-5"> 
   <div class="card shadow-lg p-4"> 
     <h2 class="mb-4 text-primary">Add New Category</h2> 
 
-    <form method="post" action="http://localhost:5000/createcategory?key={{{apikey}}}">
+    <form id="formCategory">
       <div class="mb-3"> 
         <label class="form-label">Category</label> 
         <input 
@@ -14,7 +15,7 @@
         > 
       </div> 
 
-      <button type="submit" class="btn btn-primary w-100">
+      <button type="submit" class="btn btn-primary w-100" id="submit_button">
         Add Category
       </button>
     </form>
@@ -25,27 +26,40 @@
   </div>
 </div>
 
-{{#if success}}
 <script>
-  Swal.fire({
+  const key = {{{apikey}}}
+  const form_data = document.getElementById("formCategory")
+  const submit = document.getElementById("submit_button")
+  const data = new FormData(form_data);
+
+  submit.addEventListener("submit", async()=>{
+    let res =  await fetch("/createCategory", {
+      method:"get",
+      headers:{
+         "x-admin-api-key": `${key}`,
+         "Content-Type": "application/json",
+            },
+      body:JSON.stringify(data)      
+    })
+    let data = await res.json()
+    if(data.success === true){
+      Swal.fire({
     icon: 'success',
     title: 'Category Added',
     text: 'Category added successfully!',
     confirmButtonColor: '#0d6efd'
-  });
-</script>
-{{/if}}
-
-{{#if error}}
-<script>
-  Swal.fire({
+      });
+    }else{
+    Swal.fire({
     icon: 'error',
     title: 'Error',
     text: 'Category not added. Please try again.',
     confirmButtonColor: '#dc3545'
-  });
+  });}
+  })
+  
+  
 </script>
-{{/if}}
 
 
     

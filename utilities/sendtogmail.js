@@ -137,4 +137,4 @@ function CancelOrder(order, approveLink){
         html:htmlBody
     })
 }
-module.exports = { SendOrdertoGmail, CancelOrder };
+module.exports = { SendOrdertoGmail};

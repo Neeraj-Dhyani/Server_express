@@ -1,0 +1,93 @@
+{{> navbar}}
+
+<div class="container mt-5">
+  <div class="card shadow-lg">
+    <div class="card-header bg-dark text-white">
+      <h4 class="mb-0">Add New Banner</h4>
+    </div>
+
+    <div class="card-body">
+      <form id="banner_form">
+
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input type="text" name="title" class="form-control" placeholder="Banner title" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Subtitle</label>
+          <input type="text" name="subtitle" class="form-control" placeholder="Banner subtitle">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Offer</label>
+          <input type="text" name="offer" class="form-control" placeholder="e.g. 50% OFF">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Coupon Code</label>
+          <input type="text" name="coupon" class="form-control" placeholder="e.g. SAVE50">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Banner Image</label>
+          <input type="file" name="image" class="form-control" accept="image/*" required>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Starting Date</label>
+            <input type="date" name="startingDate" class="form-control" required>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">End Date</label>
+            <input type="date" name="endDate" class="form-control" required>
+          </div>
+        </div>
+        
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary px-4" id="submit">
+            Create Banner
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const form_data = document.getElementById("banner_form")
+  const submit = document.getElementById("submit")
+  submit.addEventListener("click", async()=>{
+    const data = new FormData(form_data);
+    const payload = Object.fromEntries(data)
+
+    const res = await fetch("/createbanner", {
+      method:"post",
+      headers:{
+        "x-admin-api-key": `${key}`,
+        "Content-Type": "application/json",
+      }
+      body:JSON.stringify(payload)
+    })
+    const data = await res.json()
+    if(data.success === true){
+       Swal.fire({
+    icon: 'success',
+    title: 'Category Added',
+    text: 'Category added successfully!',
+    confirmButtonColor: '#0d6efd'
+    })
+    }else{
+      Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: 'Category not added. Please try again.',
+    confirmButtonColor: '#dc3545'
+    })
+    }
+  })
+  const data = new FormData(form_data)
+</script>

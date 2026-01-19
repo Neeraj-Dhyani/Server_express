@@ -4,16 +4,24 @@ const Schema = mongoose.Schema;
 let productSchema = new Schema({
   itemCode: { type: String, required: true, unique: true },
   name: { type: String },
+  product_title:{type: String, required:true},
+  product_details:{type:String, required:true},
   category: { type:mongoose.Schema.Types.ObjectId,ref:"category ", required: true }, 
-  price: { type: String, required: true },
+  fabric:{type:String, required:true},
+  neckline:{type:String, required:true},
+  sleeve_length:{type:String, required:true},
+  occasion:{type:String, required:true},
+  price: { type: String, required:true },
+  wash_care:{type:String, required:true},
   gst: { type: String },  
-  description: { type: String },
-  note: { type: String },
+  description: { type: String},
+  note: { type: String},
+  size_and_fit_note:{type:String, required:true},
   // quantity:{type:Number, default:0},
   variants: [
     {
       color: String,
-      images: [String],
+      images: [{url:String}],
       size: [String],  
       extra: mongoose.Schema.Types.Mixed 
     }

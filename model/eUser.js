@@ -73,6 +73,9 @@ const userSchema = new Schema({
     image:{
       type: String
     },
+    includes:{
+      type:String
+    }
     
   }],
   instock:{
