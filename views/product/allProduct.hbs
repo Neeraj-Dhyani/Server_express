@@ -18,15 +18,18 @@
 </table>
 {{>footer}}
 <script>
-  let key = {{{apikey}}}
-    let table_body = document.querySelector("#table_body");
-    fetch(`http://localhost:5000/getallProduct`,{
+  const key = "{{apikey}}"
+  const base_url = "{{base_url}}"
+  const web_url = "{{default_url}}"
+  console.log(base_url, web_url)
+  let table_body = document.querySelector("#table_body");
+  fetch(`${base_url}/getallProduct`,{
       method:"get",
       headers: { 
             "x-admin-api-key": `${key}`,
             "Content-Type": "application/json",
             },
-    }).then(item=>{return item.json()}).then((item)=>{
+  }).then(item=>{return item.json()}).then((item)=>{
       //console.log(item)
         item.product.forEach((item)=>{
           let row  = document.createElement("tr")

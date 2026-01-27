@@ -58,36 +58,48 @@
 </div>
 
 <script>
-  const form_data = document.getElementById("banner_form")
-  const submit = document.getElementById("submit")
-  submit.addEventListener("click", async()=>{
-    const data = new FormData(form_data);
-    const payload = Object.fromEntries(data)
+  const key = "{{apikey}}"
+  const default_url = "{{default_url}}"
+  //console.log(key, default_url)
+  const form = document.getElementById("banner_form")
 
-    const res = await fetch("/createbanner", {
+  form.addEventListener("submit", async(e)=>{
+     e.preventDefault()
+    const data = new FormData(form);
+
+    const res = await fetch(`${default_url}/createbanner`, {
       method:"post",
       headers:{
         "x-admin-api-key": `${key}`,
-        "Content-Type": "application/json",
-      }
-      body:JSON.stringify(payload)
+      },
+      body:data
     })
-    const data = await res.json()
-    if(data.success === true){
-       Swal.fire({
-    icon: 'success',
-    title: 'Category Added',
-    text: 'Category added successfully!',
-    confirmButtonColor: '#0d6efd'
+    const actual_data = await res.json()
+    console.log(actual_data)
+
+    if(res.ok && actual_data.success){
+      Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Somthing Went Rong',
+      confirmButtonColor: '#dc3545'
+    })
+    }
+    if(actual_data.success === true){
+      Swal.fire({
+      icon: 'success',
+      title: 'Category Added',
+      text: 'Category added successfully!',
+      confirmButtonColor: '#0d6efd'
     })
     }else{
       Swal.fire({
-    icon: 'error',
-    title: 'Error',
-    text: 'Category not added. Please try again.',
-    confirmButtonColor: '#dc3545'
+      icon: 'error',
+      title: 'Error',
+      text: 'Category not added. Please try again.'+actual_data.Error.message||actual_data.msg,
+      confirmButtonColor: '#dc3545'
     })
     }
   })
-  const data = new FormData(form_data)
+ 
 </script>

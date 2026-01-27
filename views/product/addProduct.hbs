@@ -79,7 +79,8 @@
     let formdata = new FormData(form)
     const data = Object.fromEntries(formdata.entries())
     console.log(data)
-     let res = await fetch(`/uploadproduct`,{
+     try{
+        let res = await fetch(`/uploadproduct`,{
         method:"post",
         headers: { 
             "x-admin-api-key": `${key}`,
@@ -102,6 +103,9 @@
             icon:"error"
         })
     }
+     }catch(err){
+        console.log(err)
+     }
     }) 
     
     

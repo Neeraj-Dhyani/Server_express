@@ -8,13 +8,27 @@ require("dotenv").config();
 const path = require("path");
 const cookie_parser = require("cookie-parser")
 const method_override = require("method-override")
-const { json } = require("stream/consumers");
+app.set('trust proxy', true);
 let PORT = process.env.PORT ||5000;
 // -----------------------------------middleware--------------------------------
-app.use("/uploads", express.static(path.join(__dirname, "Produce_image")));
+app.set('trust proxy', true); 
+
+const adminIpWhitelist = (req, res, next)=>{
+  // const  clientIP = req.ip|| req.headers["x-forwarded-for"]||req.socket.remoteAddress;
+   let clientIP = req.headers["x-forwarded-for"] 
+    ? req.headers["x-forwarded-for"].split(",")[0]
+    : req.socket.remoteAddress;
+  const allowedIp = process.env.MY_ADMIN_IP.trim()
+  console.log("client ip : ", clientIP)
+  if(clientIP===allowedIp||clientIP==='::1'||clientIP==='127.0.01'){
+    next()
+  }else{
+    res.status(404).send("Not Found")
+  }
+}
 app.use(express.json())
-app.use(cookie_parser())
 app.use(express.urlencoded({extended:true}))
+app.use(cookie_parser())
 app.use(method_override("_method"))
 const allowedOrigins = [
   "http://localhost:5173",
@@ -77,21 +91,25 @@ app.use((err, req, res, next) => {
     error: err.message,
   });
 });
-// -----------------------------------routers---------------------------------------
-app.get("/login", (req, res)=>{
-    res.render("auth/login")
-})
+// ----------------------------------Connnect Database-----------------------------
 mongoose.connect(process.env.MONGO_URI).then(()=>{
     console.log("database conected successfully!")
 }).catch((err)=>{
     console.log(err);
 })
+// -----------------------------------routers---------------------------------------
+app.get("/login", adminIpWhitelist, (req, res)=>{
+    res.render("auth/login")
+})
+
 
 app.use(require("./controller/auth"))
 app.use(require("./controller/product"))
 app.use(require("./controller/chatbot"))
 app.use(require("./controller/admin"))
-app.use("/admin", require("./controller/router"))
+app.use("/admin", adminIpWhitelist, require("./controller/router"))
+
+
 app.listen(PORT, ()=>{
     console.log(`surver runnig on http://localhost:${PORT}`);
 })

@@ -16,8 +16,12 @@ const path = require("path")
 const Category = require("../model/category")
 const Coupon = require("../model/coupon")
 const requireapinkey = require("../middleware/requireapinkey")
-
-
+const cloudinary = require("cloudinary").v2
+cloudinary.config({
+    cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
+    api_key : process.env.CLOUDINARY_API_KEY,
+    api_secret : process.env.CLOUDINARY_API_SECRET 
+})
 
 router.post("/createAccount", async(req, res, next)=>{
     const {name, email, password} = req.body
@@ -59,7 +63,7 @@ router.post("/adminlogin", async(req, res, next)=>{
             res.cookie("token", token, {
                 httpOnly: true,
                 secure: false,
-                maxAge :20*60*60*100
+                maxAge : 24 * 60 * 60 * 1000
             })
             return res.status(200).json({success:true, redirect:"/admin/home" ,token:token})
         
@@ -196,32 +200,58 @@ router.put("/updateorderstatus/:id", async(req, res, next)=>{
     }
 })
 router.post("/createbanner", requireapinkey, async(req, res, next)=>{
-    const busboy = Busboy({headers:req.headers})
-    const title = "";
-    const subtitle = "";
-    const offer = "";
-    const coupon = "";
-    const images = [];
-    
-    const upload_image = path.join(__dirname, "../uploaded_Banner_image")
-    if(!fs.existsSync(upload_image)){
-            fs.mkdirSync(upload_image)
-        }
+    let busboy = Busboy({headers:req.headers})
+    let title = "";
+    let subtitle = "";
+    let offer = "";
+    let coupon = "";
+    let images = [];
+    let all_UploadResults = []
+     
     busboy.on("field", (fieldname, value) => {
     if (fieldname === "title") title = value;
     if (fieldname === "subtitle") subtitle = value;
     if (fieldname === "offer") offer = value;
     if (fieldname === "coupon") coupon = value;
-  });
 
-    busboy.on('file', (fieldname, file, {filename})=>{
-        const savePath = path.join(upload_image, `${Date.now()}-${filename}`)
-        const writeSteam = fs.createWriteStream(savePath)
-        file.pipe(writeSteam)
-        images.push(savePath)
-    })
-     busboy.on("finish", async()=>{
+    });
+
+        busboy.on("file", (fieldname, file, info)=>{
+            if(!info.mimeType.startsWith("image/")){
+                file.resume()
+                return
+            }
         try{
+            const uploadResult = new Promise((resolve, reject)=>{
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                    folder:"Banner_image",
+                    resource_type:"image"
+                    }, 
+                    (error, result)=>{
+                        if(error){
+                            reject(error)
+                        }
+                        if(!result||!result.secure_url){
+                            return reject(new Error("Cloudnary retrun no result"))
+                        }
+                        
+                        images.push(result.secure_url)
+                        resolve(result.secure_url)
+                    })
+                    file.pipe(stream)
+            })
+            all_UploadResults.push(uploadResult)
+        }catch(err){
+            console.log("cloudinary upload error : " ,err)
+        }
+    })
+    busboy.on("finish", async()=>{
+        try{
+            await Promise.all(all_UploadResults)
+            if (!images.length) {
+            return res.status(400).json({ msg: "No images uploaded" });
+            }
             const new_banner = await Banner.create({title, subtitle, offer, coupon, image:images[0]})
             res.status(200).json( {success:true, msg:"Banner create successfully"})
         }catch(err){
@@ -270,17 +300,17 @@ router.post("/createCouponCode", requireapinkey, async(req, res, next)=>{
    }
 
 })
-router.patch("/deactivCouponcode/:id",  requireapinkey, async(req, res, next)=>{
+router.patch("/deactivCouponCode/:id", requireapinkey, async(req, res, next)=>{
     try{
         await Coupon.findByIdAndUpdate(req.params.id, {active:false})
     }catch(err){
         next(err)
     }
 })
-router.delete("deletecouponcode/:id", requireapinkey, async(req, res, next)=>{
+router.delete("/deleteCouponCode/:id", requireapinkey, async(req, res, next)=>{
     try{
-        await Coupon.findByIdAndDelete(id)
-        res.status(200).json({msg:"coupon code sucessfully deleted"})
+        await Coupon.findByIdAndDelete(req.params.id)
+        res.status(200).json({success:true,  msg:"coupon code sucessfully deleted"})
     }catch(err){
         next(err)
     }
