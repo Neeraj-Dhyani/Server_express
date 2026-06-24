@@ -8,7 +8,7 @@ require("dotenv").config();
 const path = require("path");
 const cookie_parser = require("cookie-parser")
 const method_override = require("method-override")
-app.set('trust proxy', true);
+app.set('trust proxy', true); 
 let PORT = process.env.PORT ||5000;
 // -----------------------------------middleware--------------------------------
 app.set('trust proxy', true); 

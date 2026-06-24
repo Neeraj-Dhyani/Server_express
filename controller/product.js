@@ -8,6 +8,7 @@ const requireLogin = require("../middleware/requireLogin");
 const { trusted } = require("mongoose");
 const requireapinkey = require("../middleware/requireapinkey");
 const Category = require("../model/category")
+const csv = require("csv-parser")
 const cloudinary = require("cloudinary").v2
 cloudinary.config({
     cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
@@ -49,6 +50,14 @@ router.post("/uploadproduct", requireapinkey, async(req, res)=>{
          res.status(500).json({ message: "Internal server error", error: error.message });
     }
 
+})
+router.post("/uploadCSV", requireapinkey, async(req, res, next)=>{
+    const busboy = Busboy({headers:req.headers})
+    busboy.on("file", (fieldname, file, info)=>{
+        haseFile = true
+
+        file.pipe(csv())       
+    })
 })
 router.put("/uploadproductimg/:id",async(req, res)=>{
     const busboy = Busboy({
